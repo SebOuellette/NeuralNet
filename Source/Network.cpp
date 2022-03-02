@@ -2,8 +2,7 @@
 
 // debug
 #include <iostream>
-#include <math.h>
-#include <stdexcept>
+//#define DEBUG_MODE
 
 // Create a network
 // Layer sizes are passed by using array syntax as parameter
@@ -23,7 +22,13 @@ Network::Network(layer_s input, SizeList layerSizes, layer_s output) {
 	}
 
 	// Seed the pseudorandom number generator to the current time in seconds
+#ifdef DEBUG_MODE
+	std::cout << "DEBUG MODE ENABLED" << std::endl;
+	srand(2);
+#else
 	srand(time(NULL));
+#endif
+	
 
 
 	// Add all the sizes to an array so we know the size of the next layer,
@@ -77,9 +82,72 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 	return actualOutput;
 }
 
-// A recursive implementation of the backpropagation algorithm
-void backPropagate(Vector expectedOutput, Vector actualOutput, int layer) {
+// Get the weights connecting the previous layer with the current neuron
+Vector Network::getPreviousWeights(index currentLayer, index neuron) {
+	if (currentLayer < 1)
+		throw std::invalid_argument("Current layer has now previous layers");
+	if (neuron < 0)
+		throw std::invalid_argument("Neuron index is less than 0");
 
+	// neuronth row is the weights connecting the previous layer to that neuron
+	return this->layers[currentLayer-1].getWeights()[neuron];
+}
+
+// Get the weights connecting the previous layer with the current neuron
+float Network::getPreviousBias(index currentLayer, index neuron) {
+	if (currentLayer < 1)
+		throw std::invalid_argument("Current layer has now previous layers");
+	if (neuron < 0)
+		throw std::invalid_argument("Neuron index is less than 0");
+
+	// neuronth row is the bias to find that neuron
+	return this->layers[currentLayer-1].getBiases()[neuron];
+}
+
+// A recursive implementation of the backpropagation algorithm
+void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index layer) {
+	// Exit condition
+	if (this->layers[layer].getType() == Input)
+		return;
+
+	int neuronCount = this->layers[layer].getNeurons().size();
+	Vector previousNeurons = this->layers[layer-1].getNeurons();
+
+	// The desired changes for the previous layer of neurons
+	Vector desiredNeuronChanges;
+	// Fill the vector with 0s.
+	for(int i = 0; i < previousNeurons.size(); i++)
+		desiredNeuronChanges.push_back(0);
+
+	// Loop through all neurons
+	for (index n = 0; n < neuronCount; n++) {
+		float cost = localCost(expectedOutput[n], actualOutput[n]);
+
+		// Step 1: Proportionally to the Cost, Change the Bias
+		this->layers[layer-1].moveBias(n, cost);
+
+		// Step 2: Change the Weights
+		// Loop through all the prevoius neurons
+		for (int i = 0; i < previousNeurons.size(); i++) {
+			// Find the cost between expected and value of previous neuron
+			float previousNeuronCost = localCost(expectedOutput[n], previousNeurons[i]);
+
+			// Adjust weight based on that cost
+			this->layers[layer-1].moveWeight(n, i, previousNeuronCost);
+
+			// For step 3, save all the desired changes for the next neuron
+			desiredNeuronChanges[i] += previousNeuronCost;
+		}
+	}
+
+	// Step 3: Change the Neurons
+	// Add the previous layer's neurons to the desired neuron changes
+	for (int i = 0; i < previousNeurons.size(); i++) {
+		desiredNeuronChanges[i] += previousNeurons[i];
+	}
+
+	// Recursively call this function again, as the final part of Step 3
+	this->backPropagate(desiredNeuronChanges, previousNeurons, layer - 1);
 }
 
 // Perform a Mean Square Error calculation
@@ -89,10 +157,11 @@ float Network::calculateNetworkCost(Vector expectedOutput, Vector actualOutput) 
 	if (expectedOutput.size() < 1)
 		throw std::invalid_argument("Argument vectors must be larger than 0");
 
-	// Mean Square error caluclation
+	// Mean Square error caluclation - Customized
+	// It's more like Mean Cubed Error
 	float sum = 0;
 	for (int i = 0; i < expectedOutput.size(); i++) {
-		sum += localCost(actualOutput[i], expectedOutput[i]);
+		sum += fabs(localCost(actualOutput[i], expectedOutput[i]));
 	}
 	sum *= 1.f/expectedOutput.size();
 

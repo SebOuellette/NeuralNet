@@ -7,6 +7,8 @@ float ReLU(float x) {
 }
 
 // Squared difference of two values
+// This is an adjusted cost function from what's normally used.
+// This just makes more sense in implementation
 float localCost(float expected, float actual) {
-	return powf(expected - actual, 2.f);
+	return powf(expected - actual, 3);
 }

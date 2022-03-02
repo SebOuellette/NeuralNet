@@ -51,14 +51,14 @@ void Layer::InitializeWeights(layer_s layerSize, layer_s nextLayerSize) {
 
 // Initialize neurons with a value of 0 (OFF)
 void Layer::InitializeNeurons(layer_s layerSize) {
-	for (int i = 0; i < layerSize; i++) {
+	for (layer_s i = 0; i < layerSize; i++) {
 		this->neurons.push_back(0);
 	}
 }
 
 // Initialize biases to random values
 void Layer::InitializeBiases(layer_s biasCount) {
-	for (int i = 0; i < biasCount; i++) {
+	for (layer_s i = 0; i < biasCount; i++) {
 		this->biases.push_back(generateWeight());
 	}
 }
@@ -72,7 +72,7 @@ Vector Layer::getNeurons() {
 	return this->neurons;
 }
 
-Vector Layer::getBias() {
+Vector Layer::getBiases() {
 	return this->biases;
 }
 
@@ -85,6 +85,15 @@ LayerType Layer::getType() {
 // Set the neurons
 void Layer::setNeurons(Vector newNeurons) {
 	this->neurons = newNeurons;
+}
+
+// Adjust the bias, generally proportionally to a cost function given as "adjustment"
+void Layer::moveBias(index biasToChange, float adjustment) {
+	this->biases[biasToChange] += adjustment;
+}
+
+void Layer::moveWeight(index row, index column, float adjustment) {
+	this->weights[row][column] += adjustment;
 }
 
 // Methods
@@ -104,9 +113,9 @@ void Layer::setNextNeurons(Layer& nextLayer) {
 
 	// Loop nextLayerSize times, to populate nextLayer
 	// Do matrix multiplication, basically
-	for(int i = 0; i < nextLayerSize; i++) {
+	for(layer_s i = 0; i < nextLayerSize; i++) {
 		float sum = 0;
-		for (int l = 0; l < layerSize; l++) {
+		for (layer_s l = 0; l < layerSize; l++) {
 			sum += this->neurons[l] * this->weights[i][l];
 		}
 		sum += this->biases[i];

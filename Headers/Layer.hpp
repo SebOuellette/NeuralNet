@@ -12,6 +12,8 @@ typedef std::vector<float> Vector;
 typedef std::vector<Vector> Matrix;
 // Number of neurons in a layer
 typedef unsigned int layer_s;
+// Index to be used when accessing vectors and matrices
+typedef unsigned int index;
 // Type of a layer. Input, Hidden, or Output
 typedef enum {Input, Hidden, Output} LayerType;
 
@@ -38,11 +40,13 @@ public:
 	// Getters
 	Matrix getWeights();
 	Vector getNeurons();
-	Vector getBias();
+	Vector getBiases();
 	LayerType getType();
 
 	// Setters
 	void setNeurons(Vector);
+	void moveBias(index, float);
+	void moveWeight(index, index, float);
 
 	// Methods
 	void setNextNeurons(Layer&);

@@ -1,4 +1,8 @@
+#include <math.h>
+#include <stdexcept>
 #include "Layer.hpp"
+
+
 
 // Backpropagation Notes
 /*
@@ -18,7 +22,8 @@ neuron. We can't directly change it, so we save the desired change,
 and loop through all the output neurons, adding up all their desired 
 changes. Once all the desired changes are collected, add the changes 
 together to get a desired change for each node. Then go through the whole 
-process again.
+process again where the previous layer is the new "actual", and the 
+"expected" is the previous layer + all the desired changes.
 */
 
 typedef std::initializer_list<layer_s> SizeList;
@@ -34,7 +39,13 @@ public:
 	// Methods
 	Vector askNetwork(Vector);
 	Vector train(Vector, Vector);
-	void backPropagate(Vector, Vector, int);
+
+	// Backprop methods
+	Vector getPreviousWeights(index, index);
+	float getPreviousBias(index, index);
+	void backPropagate(Vector, Vector, index);
+
+	// Static methods
 	static float calculateNetworkCost(Vector, Vector);
 	static void PrintNeurons(Vector);
 };
