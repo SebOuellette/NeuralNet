@@ -48,4 +48,5 @@ public:
 	// Static methods
 	static float calculateNetworkCost(Vector, Vector);
 	static void PrintNeurons(Vector);
+	static void PrintMatrix(Matrix);
 };

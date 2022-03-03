@@ -130,10 +130,12 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 		// Loop through all the prevoius neurons
 		for (int i = 0; i < previousNeurons.size(); i++) {
 			// Find the cost between expected and value of previous neuron
-			float previousNeuronCost = localCost(expectedOutput[n], previousNeurons[i]);
+			float previousNeuronCost = (1-abs(localCost(expectedOutput[n], previousNeurons[i])));
+			//std::cout << previousNeuronCost << std::endl;
 
 			// Adjust weight based on that cost
 			this->layers[layer-1].moveWeight(n, i, previousNeuronCost);
+			
 
 			// For step 3, save all the desired changes for the next neuron
 			desiredNeuronChanges[i] += previousNeuronCost;
@@ -176,4 +178,12 @@ void Network::PrintNeurons(Vector neurons) {
 		std::cout << i << " ";
 	}
 	std::cout << "]" << std::endl;
+}
+
+// Print a matrix
+void Network::PrintMatrix(Matrix matrix) {
+	for (Vector v : matrix) {
+		std::cout << "-";
+		PrintNeurons(v);
+	}
 }

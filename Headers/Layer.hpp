@@ -4,9 +4,6 @@
 #include <time.h>
 #include "Functions.hpp"
 
-#define INITIAL_WEIGHT_RANGE 1
-#define INITIAL_WEIGHT_ACCURACY 1000
-
 // Stored as [Y][X] or [Row][Column]
 typedef std::vector<float> Vector;
 typedef std::vector<Vector> Matrix;

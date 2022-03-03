@@ -3,12 +3,16 @@
 
 // Logistic curve
 float ReLU(float x) {
-	return 1 / (1 + pow(e, -x));
+	return 1.f / (1.f + powf(e, -x));
 }
 
 // Squared difference of two values
 // This is an adjusted cost function from what's normally used.
 // This just makes more sense in implementation
 float localCost(float expected, float actual) {
-	return powf(expected - actual, 3);
+	float cost = powf(actual - expected, 2.f);
+
+	if (actual > expected)
+		cost *= -1;
+	return cost;
 }

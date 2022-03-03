@@ -2,29 +2,34 @@
 #include "../Headers/Network.hpp"
 
 int main(int argc, char* argv[]) {
-	Network network(2, {3, 3}, 2);
-	// Create the network input
-	Vector input = {0.2, 0.7};
-	std::cout << "Input: ";
-	Network::PrintNeurons(input);
-
-	// Declare the expected output
-	Vector expected = {0.0, 1.0};
-	std::cout << "Expected: ";
-	Network::PrintNeurons(expected);
+	// XOR
+	Network network(2, {10}, 1);
 
 	// Ask the network for ouput, without training
-	Vector output = {1.0, 0.0};//network.askNetwork({0.2, 0.7});
-	Network::PrintNeurons(output);
+	std::cout << "Untrained outputs: " << std::endl;
+	Network::PrintNeurons(network.askNetwork({0, 0}));
+	Network::PrintNeurons(network.askNetwork({0, 1}));
+	Network::PrintNeurons(network.askNetwork({1, 0}));
+	Network::PrintNeurons(network.askNetwork({1, 1}));
 
-	// Calculate the cost of the network
-	float cost = Network::calculateNetworkCost({0.0, 1.0}, output);
-	std::cout << "Network Cost: " << cost << std::endl;
+	std::cout << "Untrained cost: " << Network::calculateNetworkCost({1}, network.askNetwork({1, 0})) << std::endl;
 
 	// Train the network
-	for (int i=0;i<10;i++) {
-		Network::PrintNeurons(network.train({0.2, 0.7}, {0.0, 1.0}));
+	for (int i=0;i<1;i++) {
+		network.train({0, 0}, {0});
+		network.train({0, 1}, {0});
+		network.train({1, 0}, {0});
+		network.train({1, 1}, {0});
 	}
 
+	// Ask the network for ouput, after training
+	std::cout << "Trained outputs: " << std::endl;
+	Network::PrintNeurons(network.askNetwork({0, 0}));
+	Network::PrintNeurons(network.askNetwork({0, 1}));
+	Network::PrintNeurons(network.askNetwork({1, 0}));
+	Network::PrintNeurons(network.askNetwork({1, 1}));
+
+	std::cout << "Trained cost: " << Network::calculateNetworkCost({1}, network.askNetwork({1, 0})) << std::endl;
+	
 	return 0;
 }
