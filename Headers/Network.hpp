@@ -45,6 +45,8 @@ public:
 	float getPreviousBias(index, index);
 	void backPropagate(Vector, Vector, index);
 
+	void display();
+
 	// Static methods
 	static float calculateNetworkCost(Vector, Vector);
 	static void PrintNeurons(Vector);

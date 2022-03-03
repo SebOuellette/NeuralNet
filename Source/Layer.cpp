@@ -27,8 +27,8 @@ Layer::Layer(layer_s layerSize, LayerType type) : type(type) {
 
 // Function to generate a random weight/bias. Only used in the InitializeWeights function
 float generateWeight() {
-	//return fmod((float)random()/10000.f, 2.f) - 1.f;
-	return 0;
+	return fmod((float)random()/10000.f, 2.f) - 1.f;
+	//return 0;
 }
 
 // Private Methods

@@ -2,7 +2,7 @@
 
 // debug
 #include <iostream>
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 // Create a network
 // Layer sizes are passed by using array syntax as parameter
@@ -124,32 +124,66 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 		float cost = localCost(expectedOutput[n], actualOutput[n]);
 
 		// Step 1: Proportionally to the Cost, Change the Bias
-		this->layers[layer-1].moveBias(n, cost);
+		// This is working
+		//this->layers[layer-1].moveBias(n, cost);
 
 		// Step 2: Change the Weights
 		// Loop through all the prevoius neurons
 		for (int i = 0; i < previousNeurons.size(); i++) {
 			// Find the cost between expected and value of previous neuron
-			float previousNeuronCost = (1-abs(localCost(expectedOutput[n], previousNeurons[i])));
-			//std::cout << previousNeuronCost << std::endl;
+			float previousNeuronCost = previousNeurons[i] * cost;
 
 			// Adjust weight based on that cost
 			this->layers[layer-1].moveWeight(n, i, previousNeuronCost);
 			
 
 			// For step 3, save all the desired changes for the next neuron
-			desiredNeuronChanges[i] += previousNeuronCost;
+			// This calculation is probably, wrong, just working on weights for now
+			desiredNeuronChanges[i] += this->layers[layer-1].getWeights()[n][i];
 		}
 	}
+	//std::cout << layer << " ";
+	//Network::PrintNeurons(previousNeurons);
 
 	// Step 3: Change the Neurons
 	// Add the previous layer's neurons to the desired neuron changes
-	for (int i = 0; i < previousNeurons.size(); i++) {
-		desiredNeuronChanges[i] += previousNeurons[i];
+	if (layer != 1) {
+		for (int i = 0; i < previousNeurons.size(); i++) {
+			std::cout << "Desired for " << i << ": " << desiredNeuronChanges[i] << std::endl;
+			desiredNeuronChanges[i] += previousNeurons[i];
+		}
+		this->display();
 	}
 
 	// Recursively call this function again, as the final part of Step 3
 	this->backPropagate(desiredNeuronChanges, previousNeurons, layer - 1);
+}
+
+// Convert the entire neural network into text
+void Network::display() {
+	for (int i = 0 ; i < this->layers.size()-1; i++) {
+		// display the neurons
+		if (i == 0)
+			std::cout << "Input: ";
+		else
+		 	std::cout << i << ": ";
+		Network::PrintNeurons(this->layers[i].getNeurons());
+
+		std::cout << std::endl;
+
+		// Display the weights
+		std::cout << "Weights: " << std::endl;
+		Network::PrintMatrix(this->layers[i].getWeights());
+
+		// Display the biases
+		std::cout << "Biases: " << std::endl;
+		Network::PrintNeurons(this->layers[i].getBiases());
+
+		std::cout << std::endl;
+	}
+
+	std::cout << "Output: ";
+	Network::PrintNeurons(this->layers.back().getNeurons());
 }
 
 // Perform a Mean Square Error calculation
