@@ -140,7 +140,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 			
 
 			// For step 3, save all the desired changes for the next neuron
-			desiredNeuronChanges[i] += (abs((this->layers[layer-1].getWeights()[n][i])) * cost * WEIGHT_MULTIPLIER);
+			desiredNeuronChanges[i] += (abs((this->layers[layer-1].getWeights()[n][i])) * cost * NEURON_CHANGE_MULTIPLIER);
 		}
 	}
 	//std::cout << layer << " ";
@@ -163,6 +163,13 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 
 // Convert the entire neural network into text
 void Network::display() {
+	// Display a simplistic view of the model
+	for (int i=0;i<this->layers.size();i++) {
+		std::cout << this->layers[i].getNeurons().size() << ((i != this->layers.size()-1) ? " : " : "");
+	}
+	std::cout << std::endl;
+
+	// Display all the values associated to each neuron, weight, and bias
 	for (int i = 0 ; i < this->layers.size()-1; i++) {
 		// display the neurons
 		if (i == 0)
