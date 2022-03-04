@@ -125,7 +125,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 
 		// Step 1: Proportionally to the Cost, Change the Bias
 		// This is working
-		//this->layers[layer-1].moveBias(n, cost);
+		this->layers[layer-1].moveBias(n, cost);
 
 		// Step 2: Change the Weights
 		// Loop through all the prevoius neurons
@@ -139,7 +139,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 
 			// For step 3, save all the desired changes for the next neuron
 			// This calculation is probably, wrong, just working on weights for now
-			desiredNeuronChanges[i] += this->layers[layer-1].getWeights()[n][i];
+			desiredNeuronChanges[i] += abs(weightBiasClamp(this->layers[layer-1].getWeights()[n][i])) * cost;
 		}
 	}
 	//std::cout << layer << " ";
@@ -149,10 +149,11 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 	// Add the previous layer's neurons to the desired neuron changes
 	if (layer != 1) {
 		for (int i = 0; i < previousNeurons.size(); i++) {
-			std::cout << "Desired for " << i << ": " << desiredNeuronChanges[i] << std::endl;
+			//std::cout << "Desired for " << i << ": " << desiredNeuronChanges[i] << std::endl;
+			desiredNeuronChanges[i] = weightBiasClamp(desiredNeuronChanges[i]);
 			desiredNeuronChanges[i] += previousNeurons[i];
 		}
-		this->display();
+		//this->display();
 	}
 
 	// Recursively call this function again, as the final part of Step 3
