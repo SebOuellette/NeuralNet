@@ -2,6 +2,9 @@
 #include <stdexcept>
 #include "Layer.hpp"
 
+// This can have some odd results, but at lower testing counts,
+// it can increase accuracy with a larget multiplier (like 10000). Play around with it to get optimal results
+#define WEIGHT_MULTIPLIER 20
 
 
 // Backpropagation Notes

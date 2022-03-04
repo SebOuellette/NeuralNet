@@ -76,6 +76,8 @@ Vector Network::askNetwork(Vector inputNodes) {
 Vector Network::train(Vector input, Vector expectedOutput) {
 	Vector actualOutput = this->askNetwork(input);
 
+	//this->display();
+
 	// Begin the recursive backpropagation algorithm
 	this->backPropagate(expectedOutput, actualOutput, this->layers.size()-1);
 
@@ -138,8 +140,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 			
 
 			// For step 3, save all the desired changes for the next neuron
-			// This calculation is probably, wrong, just working on weights for now
-			desiredNeuronChanges[i] += abs(weightBiasClamp(this->layers[layer-1].getWeights()[n][i])) * cost;
+			desiredNeuronChanges[i] += (abs((this->layers[layer-1].getWeights()[n][i])) * cost * WEIGHT_MULTIPLIER);
 		}
 	}
 	//std::cout << layer << " ";
@@ -150,8 +151,8 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 	if (layer != 1) {
 		for (int i = 0; i < previousNeurons.size(); i++) {
 			//std::cout << "Desired for " << i << ": " << desiredNeuronChanges[i] << std::endl;
-			desiredNeuronChanges[i] = weightBiasClamp(desiredNeuronChanges[i]);
-			desiredNeuronChanges[i] += previousNeurons[i];
+			desiredNeuronChanges[i] = ReLU(weightBiasClamp(desiredNeuronChanges[i]) + previousNeurons[i]);
+			
 		}
 		//this->display();
 	}
