@@ -4,6 +4,10 @@
 #include <iostream>
 #define DEBUG_MODE
 
+// This can have some odd results, but at lower testing counts,
+// 300 appears to be the optimal multiplier
+#define NEURON_CHANGE_MULTIPLIER 1
+
 // Create a network
 // Layer sizes are passed by using array syntax as parameter
 // Input, Hidden layers, Output
@@ -140,7 +144,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 			
 
 			// For step 3, save all the desired changes for the next neuron
-			desiredNeuronChanges[i] += (abs((this->layers[layer-1].getWeights()[n][i])) * cost * NEURON_CHANGE_MULTIPLIER);
+			desiredNeuronChanges[i] += abs((this->layers[layer-1].getWeights()[n][i])) * cost  * NEURON_CHANGE_MULTIPLIER;
 		}
 	}
 	//std::cout << layer << " ";

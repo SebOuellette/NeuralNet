@@ -2,11 +2,6 @@
 #include <stdexcept>
 #include "Layer.hpp"
 
-// This can have some odd results, but at lower testing counts,
-// it can increase accuracy with a larget multiplier (like 10000). Play around with it to get optimal results
-#define NEURON_CHANGE_MULTIPLIER 300
-
-
 // Backpropagation Notes
 /*
 1. Change the bias. Move the bias an amount which is proportional to the 
