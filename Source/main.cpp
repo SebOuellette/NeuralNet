@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) {
 	// XOR
-	Network network(2, {2, 2}, 2);
+	Network network(2, {2, 2, 2}, 2);
 
 	// Ask the network for ouput, without training
 	std::cout << "Untrained outputs: " << std::endl;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	Network::PrintNeurons(network.askNetwork({1, 1}));
 
 	//std::cout << std::endl;
-	//network.askNetwork({1, 0});
+	//network.askNetwork({0, 0});
 	//network.display();
 
 	//std::cout << "Trained cost: " << Network::calculateNetworkCost({1}, network.askNetwork({1, 0})) << std::endl;

@@ -2,11 +2,11 @@
 
 // debug
 #include <iostream>
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
-// This can have some odd results, but at lower testing counts,
-// 300 appears to be the optimal multiplier
-#define NEURON_CHANGE_MULTIPLIER 1
+// Higher number protects against bias overcorrection
+#define BIAS_DIVISOR 10
+#define BACKPROP_COST_MULTIPLIER 300
 
 // Create a network
 // Layer sizes are passed by using array syntax as parameter
@@ -131,7 +131,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 
 		// Step 1: Proportionally to the Cost, Change the Bias
 		// This is working
-		this->layers[layer-1].moveBias(n, cost);
+		this->layers[layer-1].moveBias(n, cost / BIAS_DIVISOR);
 
 		// Step 2: Change the Weights
 		// Loop through all the prevoius neurons
@@ -144,21 +144,17 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 			
 
 			// For step 3, save all the desired changes for the next neuron
-			desiredNeuronChanges[i] += abs((this->layers[layer-1].getWeights()[n][i])) * cost  * NEURON_CHANGE_MULTIPLIER;
+			desiredNeuronChanges[i] += abs((this->layers[layer-1].getWeights()[n][i])) * cost * BACKPROP_COST_MULTIPLIER;
 		}
 	}
-	//std::cout << layer << " ";
-	//Network::PrintNeurons(previousNeurons);
 
 	// Step 3: Change the Neurons
 	// Add the previous layer's neurons to the desired neuron changes
 	if (layer != 1) {
 		for (int i = 0; i < previousNeurons.size(); i++) {
-			//std::cout << "Desired for " << i << ": " << desiredNeuronChanges[i] << std::endl;
 			desiredNeuronChanges[i] = ReLU(weightBiasClamp(desiredNeuronChanges[i]) + previousNeurons[i]);
 			
 		}
-		//this->display();
 	}
 
 	// Recursively call this function again, as the final part of Step 3
