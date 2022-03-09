@@ -5,7 +5,15 @@
 //#define DEBUG_MODE
 
 // Higher number protects against bias overcorrection
+// Log of the best divisor for different hidden tree layouts:
+// 2, 2, 2 - 4 or 15 or 6
+// 5, 7, 5 - 2
+// 8, 4, 8 - 4
+// 3, 3, 3 - 4 or 9
+// 4, 4, 4 - 10 or maybe 12
 #define BIAS_DIVISOR 2
+
+// Unsure of the concequences of this multiplier.... 300 seems to make training work faster for most cases
 #define BACKPROP_COST_MULTIPLIER 300
 
 // Create a network
@@ -140,7 +148,7 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 			float previousNeuronCost = previousNeurons[i] * cost;
 
 			// Adjust weight based on that cost
-			this->layers[layer-1].moveWeight(n, i, previousNeuronCost);
+			this->layers[layer-1].moveWeight(n, i, previousNeuronCost / BIAS_DIVISOR);
 			
 
 			// For step 3, save all the desired changes for the next neuron

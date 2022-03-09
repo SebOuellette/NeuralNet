@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 	
 	std::cout << " -- Debug --" << std::endl;
 	// Train the network
-	for (int i=0;i<10000;i++) {
+	for (int i=0;i<1000;i++) {
 		network.train({0, 0}, {1, 1});
 		network.train({0, 1}, {1, 0});
 		network.train({1, 0}, {0, 1});
