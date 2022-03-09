@@ -5,7 +5,7 @@
 //#define DEBUG_MODE
 
 // Higher number protects against bias overcorrection
-#define BIAS_DIVISOR 10
+#define BIAS_DIVISOR 2
 #define BACKPROP_COST_MULTIPLIER 300
 
 // Create a network
