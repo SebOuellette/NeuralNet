@@ -8,7 +8,7 @@
 // Log of the best divisor for different hidden tree layouts:
 // 2, 2, 2 - 4 or 15 or 6
 // 5, 7, 5 - 2
-// 8, 4, 8 - 4o
+// 8, 4, 8 - 4
 // 3, 3, 3 - 4 or 9
 // 4, 4, 4 - 10 or maybe 12
 #define SHIFT_DIVISOR 2
