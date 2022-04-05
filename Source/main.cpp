@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) {
 	// XOR
-	Network network(3, {5, 7, 5}, 3);
+	Network network(3, {7}, 3);
 
 	// Ask the network for ouput, without training
 	std::cout << "Untrained outputs: " << std::endl;
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	
 	std::cout << " -- Debug --" << std::endl;
 	// Train the network
-	for (int i=0;i<100000;i++) {
+	for (int i=0;i<100;i++) {
 		network.train({0, 0, 0}, {1, 1, 1});
 		network.train({0, 0, 1}, {1, 1, 0});
 		network.train({0, 1, 0}, {1, 0, 1});
