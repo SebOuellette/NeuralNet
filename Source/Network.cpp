@@ -3,7 +3,7 @@
 
 // debug
 #include <iostream>
-#include <threads> // threads
+#include <vector>
 //#define DEBUG_MODE
 
 // Higher number protects against bias overcorrection
@@ -120,18 +120,34 @@ float Network::getPreviousBias(index currentLayer, index neuron) {
 	return this->layers[currentLayer-1].getBiases()[neuron];
 }
 
-void neuronTrainThread(Vector previousNeurons, int start, int stop, Network* network, int cost, index layer, int n, Vector* desiredNeuronChanges) {
+void neuronTrainThread(
+	Vector previousNeurons, 
+	int start, 
+	int stop, 
+	Network& network, 
+	index layer,  
+	Vector& desiredNeuronChanges, 
+	int neuronCount,
+	Vector expectedOutput, 
+	Vector actualOutput) {
+	// Loop through all neurons
+	for (index n = start; n < stop; n++) {
+		float cost = localCost(expectedOutput[n], actualOutput[n]);
 
-	for (int i = start; i < stop; i++) {
-		// Find the cost between expected and value of previous neuron
-		float previousNeuronCost = previousNeurons[i] * cost;
+		// Step 1: Proportionally to the Cost, Change the Bias
+		// This is working
+		network.layers[layer-1].moveBias(n, cost / SHIFT_DIVISOR);
 
-		// Adjust weight based on that cost
-		network->layers[layer-1].moveWeight(n, i, previousNeuronCost / SHIFT_DIVISOR);
-		
+		for (int i = 0; i < previousNeurons.size(); i++) {
+			// Find the cost between expected and value of previous neuron
+			float previousNeuronCost = previousNeurons[i] * cost;
 
-		// For step 3, save all the desired changes for the next neuron
-		(*desiredNeuronChanges)[i] += abs((network->layers[layer-1].getWeights()[n][i])) * cost * BACKPROP_COST_MULTIPLIER;
+			// Adjust weight based on that cost
+			network.layers[layer-1].moveWeight(n, i, previousNeuronCost / SHIFT_DIVISOR);
+			
+			// For step 3, save all the desired changes for the next neuron
+			desiredNeuronChanges[i] += abs((network.layers[layer-1].getWeights()[n][i])) * cost * BACKPROP_COST_MULTIPLIER;
+		}
 	}
 }
 
@@ -150,30 +166,56 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 	for(int i = 0; i < previousNeurons.size(); i++)
 		desiredNeuronChanges.push_back(0);
 
+	// Starting up all the threads
+	// std::vector<std::thread> threads;
+	// threads.reserve(neuronCount);
+	// int threadCount = THREAD_COUNT;
+
+	// if (neuronCount > threadCount)
+	// 	threadCount = 1;
+	
+	// for (int i=0;i<threadCount;i++) {
+	// 	std::thread thread(neuronTrainThread, 
+	// 	previousNeurons, 
+	// 	neuronCount/threadCount * i, 
+	// 	neuronCount/threadCount * (i+1) - 1, 
+	// 	std::ref(*this), 
+	// 	layer, 
+	// 	std::ref(desiredNeuronChanges), 
+	// 	neuronCount, 
+	// 	expectedOutput, 
+	// 	actualOutput);
+
+	// 	threads.push_back(std::move(thread));
+	// }
+
+	// // // Wait for all the threads to finish
+	// for (int i=0;i<threadCount;i++) {
+	// 	if (threads[i].joinable())
+	// 		threads[i].join();
+	// }
+
 	// Loop through all neurons
 	for (index n = 0; n < neuronCount; n++) {
 		float cost = localCost(expectedOutput[n], actualOutput[n]);
-
 		// Step 1: Proportionally to the Cost, Change the Bias
 		// This is working
 		this->layers[layer-1].moveBias(n, cost / SHIFT_DIVISOR);
 
-		HANDLE CreateThreads(neuronTrainThread, previousNeurons, 0, previousNeurons.size(), this, layer, n, desiredNeuronChanges);
-		t1.join();
 		// Step 2: Change the Weights
 		// Loop through all the prevoius neurons
-		//for (int i = 0; i < previousNeurons.size(); i++) {
+		for (int i = 0; i < previousNeurons.size(); i++) {
 
-			// // Find the cost between expected and value of previous neuron
-			// float previousNeuronCost = previousNeurons[i] * cost;
+			// Find the cost between expected and value of previous neuron
+			float previousNeuronCost = previousNeurons[i] * cost;
 
-			// // Adjust weight based on that cost
-			// this->layers[layer-1].moveWeight(n, i, previousNeuronCost / SHIFT_DIVISOR);
+			// Adjust weight based on that cost
+			this->layers[layer-1].moveWeight(n, i, previousNeuronCost / SHIFT_DIVISOR);
 			
 
-			// // For step 3, save all the desired changes for the next neuron
-			// desiredNeuronChanges[i] += abs((this->layers[layer-1].getWeights()[n][i])) * cost * BACKPROP_COST_MULTIPLIER;
-		//}
+			// For step 3, save all the desired changes for the next neuron
+			desiredNeuronChanges[i] += abs((this->layers[layer-1].getWeights()[n][i])) * cost * BACKPROP_COST_MULTIPLIER;
+		}
 	}
 
 	// Step 3: Change the Neurons

@@ -1,6 +1,10 @@
 #include <math.h>
 #include <stdexcept>
+#include <thread>
+#include <vector>
 #include "Layer.hpp"
+
+#define THREAD_COUNT 1
 
 // Backpropagation Notes
 /*
@@ -52,6 +56,17 @@ public:
 	static void PrintNeurons(Vector);
 	static void PrintMatrix(Matrix);
 
-	friend void neuronTrainThread(Vector previousNeurons, int start, int stop, Network* network, int cost, index layer, int n, Vector* desiredNeuronChanges);
+	friend void neuronTrainThread(
+		Vector previousNeurons, 
+		int start, 
+		int stop, 
+		Network& network, 
+		index layer, 
+		Vector& desiredNeuronChanges, 
+		int neuronCount,
+		Vector expectedOutput, 
+		Vector actualOutput);
+
+
 };
 

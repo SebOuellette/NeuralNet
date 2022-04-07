@@ -1,11 +1,11 @@
 #include <iostream>
 #include "../Headers/Network.hpp"
 
-#define TRAINING_SAMPLES 1000
+#define TRAINING_SAMPLES 300
 
 int main(int argc, char* argv[]) {
 	// XOR
-	Network network(3, {10}, 3);
+	Network network(3, {7}, 3);
 
 	// Ask the network for ouput, without training
 	std::cout << "Untrained outputs: " << std::endl;
