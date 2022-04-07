@@ -31,6 +31,8 @@ private:
 	std::vector<Layer> layers;
 
 public:
+	
+
 	// Constructor
 	Network(layer_s, SizeList, layer_s);
 
@@ -49,4 +51,7 @@ public:
 	static float calculateNetworkCost(Vector, Vector);
 	static void PrintNeurons(Vector);
 	static void PrintMatrix(Matrix);
+
+	friend void neuronTrainThread(Vector previousNeurons, int start, int stop, Network* network, int cost, index layer, int n, Vector* desiredNeuronChanges);
 };
+
