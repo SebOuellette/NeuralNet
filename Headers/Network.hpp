@@ -6,6 +6,8 @@
 
 #define THREAD_COUNT 1
 
+//#define USE_THREADS true
+
 // Backpropagation Notes
 /*
 1. Change the bias. Move the bias an amount which is proportional to the 

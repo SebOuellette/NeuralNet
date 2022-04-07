@@ -34,3 +34,6 @@ main
 
 # Valgrind
 vgcore.*
+
+# Testing data
+*.txt

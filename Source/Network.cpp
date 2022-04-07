@@ -166,6 +166,8 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 	for(int i = 0; i < previousNeurons.size(); i++)
 		desiredNeuronChanges.push_back(0);
 
+
+#ifdef USE_THREADS
 	// Starting up all the threads
 	std::vector<std::thread> threads;
 	threads.reserve(neuronCount);
@@ -194,6 +196,19 @@ void Network::backPropagate(Vector expectedOutput, Vector actualOutput, index la
 		if (threads[i].joinable())
 			threads[i].join();
 	}
+
+#else
+	neuronTrainThread( 
+		previousNeurons, 
+		0, 
+		neuronCount, 
+		*this, 
+		layer, 
+		desiredNeuronChanges, 
+		neuronCount, 
+		expectedOutput, 
+		actualOutput);
+#endif
 
 	// Loop through all neurons
 	// for (index n = 0; n < neuronCount; n++) {
