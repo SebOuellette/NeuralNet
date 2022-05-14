@@ -1,7 +1,7 @@
 CXX = g++
 
 SOURCE_FILES := $(wildcard Source/*.cpp)
-OBJECT_FILES := $(patsubst Source/%.cpp,%.o,$(wildcard Source/*.cpp))
+OBJECT_FILES := $(patsubst Source/%.cpp,%.o,$(SOURCE_FILES))
 
 all: main
 
