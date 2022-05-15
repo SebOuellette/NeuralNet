@@ -124,12 +124,13 @@ Vector Network::prompt(Vector input) {
 	return output;
 }
 
+// Backpropagation method
 Vector Network::train(Vector input, Vector expectedOutput) {
 	// concat the input values to the end of the floating values matrix.
 	// This matrix just gives the output values, so since we want to
 	// relate the input directly to the output in addition to through neuron paths...
-	Vector floatingAndInput = this->floatingValues;
-	for (float x : input)
+	Vector floatingAndInput = input;
+	for (float x : this->floatingValues)
 		floatingAndInput.push_back(x);
 
 	// Calculate the floating layer
@@ -138,14 +139,94 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 	// Calculate output
 	Vector output = findNextLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
 
-	// Step 1: Adjust Biases
-	//for (int i=0;i)
 
-	// Step 2: Adjust Weights
+
+	// Adjust the connections to the output neurons
+	Vector cost = calculateCost(output, expectedOutput);
+	// Step 1: Adjust Biases for Output Neurons
+	adjustBiases(&this->outputBiases, &cost);
+
+	// Step 2: Adjust Weights before Output Neurons
+	adjustWeights(&this->floatingWeights, &cost, &floatingAndInput);
 	
 	// Step 3: Adjust Neurons
+	Vector floatingExpected = adjustNeurons(&this->floatingWeights, &cost, &this->floatingValues);
+	
+
+
+	// // Adjust the connections to the floating neurons
+	// cost = calculateCost(this->floatingValues, floatingExpected);
+	// // Step 1: Adjust Biases for Floating Neurons
+	// adjustBiases(&this->floatingBiases, &cost);
+
+	// // Step 2: Adjust Weights before Floating Neurons
+	// adjustWeights(&this->inputWeights, &cost, &floatingAndInput);
 
 
 	// Return the output in case the user wants to use it
 	return output;
+}
+
+void Network::adjustBiases(Vector* biases, Vector* cost) {
+	for (int i=0;i<this->outputCount;i++) {
+		this->outputBiases[i] += (*cost)[i] / BIAS_ADJUST_DIVISOR;
+	}
+}
+
+void Network::adjustWeights(Matrix* weights, Vector* cost, Vector* values) {
+	for (int r=0;r<weights->size();r++) { // For each output neuron
+		
+		for (int n=0;n<values->size();n++) { // For each input neuron / connection to selected output neuron
+			// The wcost is the difference between the cost and the value.
+			float wcost = (*cost)[r] - (*values)[n];
+			(*weights)[r][n] += wcost / WEIGHT_ADJUST_DIVISOR;
+		}
+	}
+}
+
+Vector Network::adjustNeurons(Matrix* weights, Vector* cost, Vector* values) {
+	// The list of adjustments to apply to 
+	Vector neuronAdjustments(values->size());
+
+	for (int r=0;r<weights->size();r++) { // For each output neuron
+		
+		for (int n=0;n<values->size();n++) { // For each input neuron / connection to selected output neuron
+			// The wcost is the difference between the cost and the value.
+			float wcost = (*cost)[r] - (*values)[n];
+			neuronAdjustments[n] += wcost / NEURON_ADJUST_DIVISOR;
+		}
+	}
+
+	return neuronAdjustments;
+}
+
+Vector Network::calculateCost(Vector actual, Vector expected) {
+	// The vector containing the cost of the output
+	Vector cost(actual.size());
+
+	for (int i=0;i<actual.size();i++)
+		cost[i] = expected[i] - actual[i];
+
+	return cost;
+}
+
+void Network::printVector(Vector vec) {
+	std::cout << "[";
+	
+	for(float val : vec)
+		std::cout << val << ", ";
+
+	std::cout << "\b\b]" << std::endl;
+}
+
+void Network::printMatrix(Matrix matrix) {
+	for (Vector r : matrix) {
+		std::cout << "[";
+
+		for (float val : r)
+			std::cout << val << ", ";
+
+		std::cout << "\b\b]" << std::endl;
+	}
+
 }
