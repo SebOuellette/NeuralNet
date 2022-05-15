@@ -20,3 +20,10 @@ float localCost(float expected, float actual) {
 		cost *= -1;
 	return cost;
 }
+
+// Generates number between -4 and 4
+//		Works great for weight generation (generally take the form of -4 - 4)
+// 		Works great for neurons (ReLU function smushes -1 to -4 and 1 to 4 anyway)
+float getRandom(float low, float high) {
+	return std::fmod((float)rand() / 1000000, high - low) + low;
+}

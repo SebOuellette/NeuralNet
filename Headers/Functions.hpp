@@ -11,4 +11,6 @@ float weightBiasClamp(float x);
 
 float localCost(float expected, float actual);
 
+float getRandom(float low = -4, float high = 4);
+
 #endif // FUNCTIONS_HPP
