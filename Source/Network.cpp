@@ -94,11 +94,11 @@ Vector Network::findNextLayer(Vector vector, Matrix matrix, Vector biases) {
 		// the row of the output vector. so now we need to put that sum in the 
 		// next row of the result
 
-		// before we do that though, the resulting value must be constrained
-		sum = ReLU(sum);
-
-		// Finally to add the bias corrosponding to this neuron
+		// Add the bias corrosponding to this neuron
 		sum += biases[r];
+
+		// Finally, the resulting value must be constrained
+		sum = ReLU(sum);
 
 		// Next we set the "sum" as the row of the vector
 		result.push_back(sum);
@@ -111,14 +111,18 @@ Vector Network::prompt(Vector input) {
 	// concat the input values to the end of the floating values matrix.
 	// This matrix just gives the output values, so since we want to
 	// relate the input directly to the output in addition to through neuron paths...
-	Vector floatingAndInput = this->floatingValues;
-	for (float x : input)
+	Vector floatingAndInput = input;
+	for (float x : this->floatingValues)
 		floatingAndInput.push_back(x);
 
 	// Calculate the floating layer
-	this->floatingValues = findNextLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
+	Vector newFloatingValues = findNextLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
 
 	// Calculate output
+	floatingAndInput = input;
+	for (float x : newFloatingValues)
+		floatingAndInput.push_back(x);
+
 	Vector output = findNextLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
 
 	return output;
@@ -135,8 +139,7 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 
 	// Calculate the floating layer
 	this->floatingValues = findNextLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
-	
-	// Calculate output
+
 	Vector output = findNextLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
 
 
@@ -146,7 +149,7 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 	// Step 1: Adjust Biases for Output Neurons
 	adjustBiases(&this->outputBiases, &cost);
 
-	// Step 2: Adjust Weights before Output Neurons
+	//Step 2: Adjust Weights before Output Neurons
 	adjustWeights(&this->floatingWeights, &cost, &floatingAndInput);
 	
 	// Step 3: Adjust Neurons
@@ -155,12 +158,12 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 
 
 	// // Adjust the connections to the floating neurons
-	// cost = calculateCost(this->floatingValues, floatingExpected);
+	cost = calculateCost(this->floatingValues, floatingExpected);
 	// // Step 1: Adjust Biases for Floating Neurons
-	// adjustBiases(&this->floatingBiases, &cost);
+	adjustBiases(&this->floatingBiases, &cost);
 
 	// // Step 2: Adjust Weights before Floating Neurons
-	// adjustWeights(&this->inputWeights, &cost, &floatingAndInput);
+	adjustWeights(&this->inputWeights, &cost, &floatingAndInput);
 
 
 	// Return the output in case the user wants to use it
@@ -168,8 +171,8 @@ Vector Network::train(Vector input, Vector expectedOutput) {
 }
 
 void Network::adjustBiases(Vector* biases, Vector* cost) {
-	for (int i=0;i<this->outputCount;i++) {
-		this->outputBiases[i] += (*cost)[i] / BIAS_ADJUST_DIVISOR;
+	for (int i=0;i<biases->size();i++) {
+		(*biases)[i] += (*cost)[i] / BIAS_ADJUST_DIVISOR;
 	}
 }
 
@@ -178,7 +181,7 @@ void Network::adjustWeights(Matrix* weights, Vector* cost, Vector* values) {
 		
 		for (int n=0;n<values->size();n++) { // For each input neuron / connection to selected output neuron
 			// The wcost is the difference between the cost and the value.
-			float wcost = (*cost)[r] - (*values)[n];
+			float wcost = (*cost)[r] * (*values)[n];
 			(*weights)[r][n] += wcost / WEIGHT_ADJUST_DIVISOR;
 		}
 	}
@@ -192,7 +195,8 @@ Vector Network::adjustNeurons(Matrix* weights, Vector* cost, Vector* values) {
 		
 		for (int n=0;n<values->size();n++) { // For each input neuron / connection to selected output neuron
 			// The wcost is the difference between the cost and the value.
-			float wcost = (*cost)[r] - (*values)[n];
+
+			float wcost = (*cost)[r] * (*values)[n];
 			neuronAdjustments[n] += wcost / NEURON_ADJUST_DIVISOR;
 		}
 	}

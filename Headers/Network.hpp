@@ -10,9 +10,9 @@
 // Debug
 #include <iostream>
 
-#define BIAS_ADJUST_DIVISOR 10.f
-#define WEIGHT_ADJUST_DIVISOR 10.f
-#define NEURON_ADJUST_DIVISOR 10.f
+#define BIAS_ADJUST_DIVISOR 2.f
+#define WEIGHT_ADJUST_DIVISOR 5.f
+#define NEURON_ADJUST_DIVISOR 5.f
 
 typedef std::vector<float> Vector;
 typedef std::vector<std::vector<float>> Matrix;
