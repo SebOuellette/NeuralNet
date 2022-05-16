@@ -1,10 +1,11 @@
 #include <iostream>
-#include "../Headers/Network.hpp"
+#include "../Headers/NeuralNetwork.hpp"
+#include "../Headers/DeepNetwork.hpp"
 
 #define TRAINING_SAMPLES 100
 
 int main(int argc, char* argv[]) {
-	Network network(3, 3, 3);
+	NeuralNetwork network(3, 3, 3);
 
 	for (int i=0;i<TRAINING_SAMPLES;i++) {
 		network.train({0, 0, 0}, {1, 1, 1});
@@ -19,21 +20,10 @@ int main(int argc, char* argv[]) {
 
 	network.prompt({1, 0, 1});
 
-	Network::printMatrix(network.inputWeights);
-	std::cout << std::endl;
-	Network::printVector(network.floatingBiases);
-	std::cout << std::endl;
+	NeuralNetwork::printVector(NeuralNetwork::calculateCost(network.prompt({1, 0, 1}), {0, 1, 0}));
 
-	Network::printVector(network.floatingValues);
-	std::cout << std::endl;
 
-	Network::printMatrix(network.floatingWeights);
-	std::cout << std::endl;
-	Network::printVector(network.outputBiases);
-	std::cout << std::endl;
-	Network::printVector(network.prompt({1, 0, 1}));
 
-	Network::printVector(Network::calculateCost(network.prompt({1, 0, 1}), {0, 1, 0}));
 
 	return 0;
 }
