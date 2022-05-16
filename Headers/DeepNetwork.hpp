@@ -3,11 +3,16 @@
 
 #include "Network.hpp"
 
+#define MIN_MUTATIONS 0
+#define MAX_MUTATIONS 2
+#define MUTATION_ADJUSTMENT 0.001
+
+
 class Instance : public Network {
 private:
 public:
 	Instance(int inputCount, int floatingCount, int outputCount);
-	void mutate(int chanceOfMutation);
+	void mutate();
 };
 
 class DeepNetwork {
@@ -23,10 +28,13 @@ public:
 
 	DeepNetwork(int inputCount, int floatingCount, int outputCount, int instanceCount);
 	
-	// Calculates the network output given some input value(s)
-	Vector prompt(Vector input);
+	// Returns 
+	Vector prompts(Vector input);
 
-	Vector evolve(Vector);
+	std::vector<Instance>* getInstances();
+
+	void propagate();
+	std::vector<Instance> evolveGen();
 };
 
 #endif // NETWORK_HPP
