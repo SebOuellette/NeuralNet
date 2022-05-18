@@ -1,6 +1,7 @@
 #include "../Headers/Network.hpp"
 #include <cmath>
 #include <cstdlib>
+#include <ios>
 #include <string>
 
 Network::Network(std::vector<int> neuronCounts) {
@@ -14,22 +15,119 @@ Network::Network(std::vector<int> neuronCounts) {
 	this->randomizeNetwork(neuronCounts);
 }
 
-Network::Network(char* filename) {
-	
+Network::Network(std::vector<int> neuronCounts, std::string filename) {
+	if (neuronCounts.size() < 2) {
+		std::cerr << "Network must have at least 2 layers given in constructor" << std::endl;
+		exit(1);
+	}
+
+	this->loadNetwork(neuronCounts, filename);
 }
 
-void Network::save(char* filename) {
+void Network::loadNetwork(std::vector<int> neuronCounts, std::string filename) {
+	std::ifstream file(filename);
+
+	if (!file) {
+		std::cerr << filename << " failed to open" << std::endl;
+		exit(1);
+	}
+
+	// if I need to throw crap out, here's where I throw it
+	char tmpBuffer;
+	float numBuffer;
+
+	// And gotta initialize this
+	this->layerCount = neuronCounts.size();
+
+	// Remember the input neurons, hidden neurons, and output neurons are all saved
+	// Values
+	for (int i=0;i<neuronCounts.size();i++) {
+		Vector values;
+		file >> tmpBuffer; // [
+
+		for (int l=0;l<neuronCounts[i];l++) {
+			file >> numBuffer; // value
+			file >> tmpBuffer; // ,
+
+			// Do something with the value
+			values.push_back(numBuffer);
+		}
+		file >> tmpBuffer; // ]
+
+		// Add the local values to the stored values
+		this->values.push_back(values);
+	}
+
+	// \n
+
+	// Biases
+	for (int i=0;i<neuronCounts.size() - 1;i++) {
+		Vector biases;
+		file >> tmpBuffer; // [
+
+		for (int l=0;l<neuronCounts[i + 1];l++) {
+			file >> numBuffer; // bias
+			file >> tmpBuffer; // ,
+
+			// Do something with the bias
+			biases.push_back(numBuffer);
+		}
+		file >> tmpBuffer; // ]
+
+		// Add the local values to the stored values
+		this->biases.push_back(biases);
+	}
+
+	// \n
+
+	// Weights
+	for (int i=0;i<neuronCounts.size() - 1;i++) {
+		Matrix layerWeights;
+		file >> tmpBuffer; // [
+
+		// rows = output size
+		for (int r=0;r<neuronCounts[i + 1];r++) {
+			Vector row;
+			file >> tmpBuffer; // [
+
+			// cols = input size
+			for (int c=0;c<neuronCounts[i];c++) { // haha c++
+				file >> numBuffer; // weight
+				file >> tmpBuffer; // ,
+
+				// Do something with the weight
+				row.push_back(numBuffer);
+			}
+			file >> tmpBuffer; // ]
+
+			layerWeights.push_back(row);
+		}
+
+		file >> tmpBuffer; // [
+		this->weights.push_back(layerWeights);
+	}
+
+	
+	file.close();
+}
+
+void Network::save(std::string filename) {
 	std::ofstream file(filename);
+
+	if (!file) {
+		std::cerr << filename << " failed to open" << std::endl;
+		exit(1);
+	}
 
 	// I don't want to make so many small writes, so I'll have a buffer
 	std::string writeBuffer = "";
 
-	
+	// Remember the input neurons, hidden neurons, and output neurons are all saved
 	// Values
 	for (int i=0;i<this->values.size();i++) {
 		writeBuffer += '[';
 		for (int l=0;l<this->values[i].size();l++) {
-			writeBuffer += std::to_string(this->values[i][l]);
+			writeBuffer += std::to_string(this->values[i][l]) +',';
 		}
 		writeBuffer += ']';
 	}
@@ -40,7 +138,7 @@ void Network::save(char* filename) {
 	for (int i=0;i<this->biases.size();i++) {
 		writeBuffer += '[';
 		for (int l=0;l<this->biases[i].size();l++) {
-			writeBuffer += std::to_string(this->biases[i][l]);
+			writeBuffer += std::to_string(this->biases[i][l]) + ',';
 		}
 		writeBuffer += ']';
 	}
@@ -53,7 +151,7 @@ void Network::save(char* filename) {
 		for (int r=0;r<this->weights[i].size();r++) {
 			writeBuffer += '[';
 			for (int c=0;c<this->weights[i][r].size();c++)
-				writeBuffer += std::to_string(this->weights[i][r][c]);
+				writeBuffer += std::to_string(this->weights[i][r][c]) + ',';
 			writeBuffer += ']';
 		}
 		writeBuffer += ']';
@@ -76,7 +174,7 @@ void Network::randomizeNetwork(std::vector<int> neuronCounts) {
 	// Fill values with floats 0. to 1.
 	for (int i=0;i<layerCount;i++) {
 		Vector layer;
-		for (int l=0;l<neuronCounts[i + 1];l++) {
+		for (int l=0;l<neuronCounts[i];l++) {
 			layer.push_back(getRandom(0., 1.));
 		}
 		this->values.push_back(layer);
@@ -214,6 +312,23 @@ void Network::train(Vector expectedOutput) {
 		expected.resize(lastValues->size());
 		for (int i=0;i<expected.size();i++) {
 			expected[i] = (*lastValues)[i] + neuronAdjustments[i];
+		}
+	}
+}
+
+void Network::print() {
+	for (int i=0;i<=this->weights.size();i++) {
+		std::cout << "Layer " << i << " - ";
+		Network::printVector(this->values[i]);
+		std::cout << std::endl;
+		
+
+		if (i < this->weights.size()) {
+			Network::printMatrix(this->weights[i]);
+			std::cout << std::endl;
+
+			Network::printVector(this->biases[i]);
+			std::cout << std::endl;
 		}
 	}
 }

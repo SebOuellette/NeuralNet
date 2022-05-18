@@ -5,10 +5,11 @@
 //#include "../Headers/DeepNetwork.hpp"
 #include "../Headers/Network.hpp"
 
-#define TRAINING_SAMPLES 5000
+#define TRAINING_SAMPLES 100000
 
 int main(int argc, char* argv[]) {
-	Network network({3, 3, 3});
+	Network network({3, 4, 3}, "savefile.noupload");
+
 
 	for (int i=0;i<TRAINING_SAMPLES;i++) {
 		network.train({0, 0, 0}, {1, 1, 1});
@@ -16,28 +17,26 @@ int main(int argc, char* argv[]) {
 		network.train({0, 1, 0}, {1, 0, 1});
 		network.train({0, 1, 1}, {1, 0, 0});
 		network.train({1, 0, 0}, {0, 1, 1});
-		network.train({1, 0, 1}, {0, 1, 0});
+		
+		//network.train({1, 0, 1}, {0, 1, 0});
+		
 		network.train({1, 1, 0}, {0, 0, 1});
 		network.train({1, 1, 1}, {0, 0, 0});
+
+		Network::printVector(network.perform({1, 0, 1}));
 	}
 
 	network.perform({1, 0, 1});
 
-	// for (int i=0;i<network.weights.size();i++) {
-	// 	Network::printVector(network.values[i]);
-	// 	std::cout << std::endl;
-	// 	Network::printMatrix(network.weights[i]);
-	// 	std::cout << std::endl;
-	// }
-	// Network::printVector(network.values.back());
-	// std::cout << std::endl;
+	network.print();
 
-	// std::cout << std::endl;
+
 	std::cout << "Cost: " << std::endl;
 	Network::printVector(Network::calculateCost(network.perform({1, 0, 1}), {0, 1, 0}));
 
 
 	network.save("savefile.noupload");
+
 	// Init
 	// float x[INSTANCE_COUNT] = {0};
 	// float y[INSTANCE_COUNT] = {0};

@@ -10,7 +10,7 @@
 #include <fstream>
 
 #define BIAS_ADJUST_DIVISOR 3.f
-#define WEIGHT_ADJUST_DIVISOR 2.f
+#define WEIGHT_ADJUST_DIVISOR 3.f
 #define NEURON_ADJUST_DIVISOR 10.f
 
 typedef std::vector<float> Vector;
@@ -26,7 +26,19 @@ protected:
 	// networks to be created with only small adjustments
 	int layerCount;
 
-	// Hidden values
+	
+
+
+	// Initialize values, biases, and weights with random values
+	void randomizeNetwork(std::vector<int> neuronCounts);
+	void loadNetwork(std::vector<int> neuronCounts, std::string filename);
+
+	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
+	
+
+public:
+
+// Hidden values
 	std::vector<Vector> values;
 	// Biases corresponding to each value
 	std::vector<Vector> biases;
@@ -34,16 +46,10 @@ protected:
 	std::vector<Matrix> weights;
 
 
-
-	// Initialize values, biases, and weights with random values
-	void randomizeNetwork(std::vector<int> neuronCounts);
-
-	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
-	
-
-public:
 	Network(std::vector<int> neuronCounts);
-	Network(char* filename);
+
+	// Load the network from a file
+	Network(std::vector<int> neuronCounts, std::string filename);
 	
 	// Propagates through the network
 	// Returns the output
@@ -55,7 +61,13 @@ public:
 	// then backpropagates with a given expected output
 	void train(Vector input, Vector expectedOutput);
 
-	void save(char* filename);
+
+	// Save the network to a file
+	void save(std::string filename);
+
+
+	// print the network to stdout
+	void print();
 
 	static Vector calculateCost(Vector actual, Vector expected);
 	static void printVector(Vector vec);
