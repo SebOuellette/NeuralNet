@@ -1,8 +1,5 @@
 #include "../Headers/Network.hpp"
-#include <cmath>
-#include <cstdlib>
-#include <ios>
-#include <string>
+#include <thread>
 
 Network::Network(std::vector<int> neuronCounts) {
 	if (neuronCounts.size() < 2) {
@@ -263,11 +260,82 @@ Vector Network::perform(Vector input) {
 	return this->values.back();
 }
 
-void Network::train(Vector input, Vector expectedOutput) {
-	perform(input);
+void Network::prepareBatches(int batchSize, int trainingSamples) {
+	this->batchSize = batchSize;
+	this->trainingSamples = trainingSamples;
+}
 
-	// Don't have to return, but if I need to change the return type later...
-	return this->train(expectedOutput);
+void Network::batch(Vector input, Vector expectedOutput) {
+	if (this->values.back().size() != expectedOutput.size()) {
+		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
+		exit(1);
+	}
+
+	this->perform(input);
+
+	this->batch(expectedOutput);
+}
+
+void Network::batch(Vector expectedOutput) {
+	if (this->values.back().size() != expectedOutput.size()) {
+		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
+		exit(1);
+	}
+
+	std::vector<std::thread*> threads;
+
+	for(int t=0;t<this->batchSize;t++) {
+		threads.push_back(new std::thread([&] {
+			for (int trainingCycle=0;trainingCycle<this->trainingSamples;trainingCycle++) {
+
+				Vector expected = expectedOutput;
+
+				// Loop through all layers (recursion but without the downsides)
+				int layer = this->layerCount;
+				while (layer-- > 1) {
+
+					Vector* lastValues = &this->values[layer - 1];
+					Vector* biases = &this->biases[layer - 1];
+					Matrix* weights = &this->weights[layer - 1];
+
+					// For Step 3
+					Vector neuronAdjustments(lastValues->size());
+
+					Vector cost = calculateCost(this->values[layer], expected);
+
+					// Train the connections to each output neuron
+					for (int r=0;r<this->values[layer].size();r++) {
+						
+						// Step 1: Adjust Bias
+						(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
+						
+						// Step 2: Adjust weights
+						for (int l=0;l<lastValues->size();l++) {
+							(*weights)[r][l] += cost[r] * (*lastValues)[l] / WEIGHT_ADJUST_DIVISOR;
+						}
+
+						// Step 3: Adjust neurons
+						for (int l=0;l<lastValues->size();l++) {
+							neuronAdjustments[l] += cost[r] * (*lastValues)[l] / NEURON_ADJUST_DIVISOR;
+						}
+					}
+
+					// // Continuing Step 3: Create the new expected value for the layer before
+					expected.resize(lastValues->size());
+					for (int i=0;i<expected.size();i++) {
+						expected[i] = (*lastValues)[i] + neuronAdjustments[i];
+					}
+				}
+			}
+
+		}));
+	}
+
+	// Join the threads
+	for (int i=0;i<batchSize;i++) {
+		threads[i]->join();
+		delete threads[i];
+	}
 }
 
 void Network::train(Vector expectedOutput) {
@@ -276,44 +344,7 @@ void Network::train(Vector expectedOutput) {
 		exit(1);
 	}
 
-	Vector expected = expectedOutput;
-
-	// Loop through all layers (recursion but without the downsides)
-	int layer = this->layerCount;
-	while (layer-- > 1) {
-
-		Vector* lastValues = &this->values[layer - 1];
-		Vector* biases = &this->biases[layer - 1];
-		Matrix* weights = &this->weights[layer - 1];
-
-		// For Step 3
-		Vector neuronAdjustments(lastValues->size());
-
-		Vector cost = calculateCost(this->values[layer], expected);
-
-		// Train the connections to each output neuron
-		for (int r=0;r<this->values[layer].size();r++) {
-			
-			// Step 1: Adjust Bias
-			(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
-			
-			// Step 2: Adjust weights
-			for (int l=0;l<lastValues->size();l++) {
-				(*weights)[r][l] += cost[r] * (*lastValues)[l] / WEIGHT_ADJUST_DIVISOR;
-			}
-
-			// Step 3: Adjust neurons
-			for (int l=0;l<lastValues->size();l++) {
-				neuronAdjustments[l] += cost[r] * (*lastValues)[l] / NEURON_ADJUST_DIVISOR;
-			}
-		}
-
-		// // Continuing Step 3: Create the new expected value for the layer before
-		expected.resize(lastValues->size());
-		for (int i=0;i<expected.size();i++) {
-			expected[i] = (*lastValues)[i] + neuronAdjustments[i];
-		}
-	}
+	
 }
 
 void Network::print() {

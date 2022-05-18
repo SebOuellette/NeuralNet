@@ -5,26 +5,26 @@
 //#include "../Headers/DeepNetwork.hpp"
 #include "../Headers/Network.hpp"
 
-#define TRAINING_SAMPLES 100000
+#define BATCH_SIZE 10
+#define TRAINING_SAMPLES 1000
 
 int main(int argc, char* argv[]) {
-	Network network({3, 4, 3}, "savefile.noupload");
+	Network network({3, 10, 10, 3});
 
+	network.prepareBatches(BATCH_SIZE, TRAINING_SAMPLES);
 
-	for (int i=0;i<TRAINING_SAMPLES;i++) {
-		network.train({0, 0, 0}, {1, 1, 1});
-		network.train({0, 0, 1}, {1, 1, 0});
-		network.train({0, 1, 0}, {1, 0, 1});
-		network.train({0, 1, 1}, {1, 0, 0});
-		network.train({1, 0, 0}, {0, 1, 1});
-		
-		//network.train({1, 0, 1}, {0, 1, 0});
-		
-		network.train({1, 1, 0}, {0, 0, 1});
-		network.train({1, 1, 1}, {0, 0, 0});
+	network.batch({0, 0, 0}, {1, 1, 1});
+	network.batch({0, 0, 1}, {1, 1, 0});
+	network.batch({0, 1, 0}, {1, 0, 1});
+	network.batch({0, 1, 1}, {1, 0, 0});
+	network.batch({1, 0, 0}, {0, 1, 1});
+	
+	network.batch({1, 0, 1}, {0, 1, 0});
+	
+	network.batch({1, 1, 0}, {0, 0, 1});
+	network.batch({1, 1, 1}, {0, 0, 0});
 
-		Network::printVector(network.perform({1, 0, 1}));
-	}
+		//Network::printVector(network.perform({1, 0, 1}));
 
 	network.perform({1, 0, 1});
 
