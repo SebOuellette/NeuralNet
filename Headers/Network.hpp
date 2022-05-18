@@ -6,13 +6,12 @@
 #include <vector>
 #include <cstdlib>
 #include <time.h>
-
-// Debug
 #include <iostream>
+#include <fstream>
 
-#define BIAS_ADJUST_DIVISOR 2.f
-#define WEIGHT_ADJUST_DIVISOR 5.f
-#define NEURON_ADJUST_DIVISOR 5.f
+#define BIAS_ADJUST_DIVISOR 3.f
+#define WEIGHT_ADJUST_DIVISOR 2.f
+#define NEURON_ADJUST_DIVISOR 10.f
 
 typedef std::vector<float> Vector;
 typedef std::vector<std::vector<float>> Matrix;
@@ -25,6 +24,7 @@ protected:
 	// New
 	// This base network class is an ANN structure to allow most other types of 
 	// networks to be created with only small adjustments
+	int layerCount;
 
 	// Hidden values
 	std::vector<Vector> values;
@@ -34,6 +34,7 @@ protected:
 	std::vector<Matrix> weights;
 
 
+
 	// Initialize values, biases, and weights with random values
 	void randomizeNetwork(std::vector<int> neuronCounts);
 
@@ -41,8 +42,8 @@ protected:
 	
 
 public:
-
 	Network(std::vector<int> neuronCounts);
+	Network(char* filename);
 	
 	// Propagates through the network
 	// Returns the output
@@ -53,6 +54,8 @@ public:
 	// Propagates through the network with a given input, 
 	// then backpropagates with a given expected output
 	void train(Vector input, Vector expectedOutput);
+
+	void save(char* filename);
 
 	static Vector calculateCost(Vector actual, Vector expected);
 	static void printVector(Vector vec);

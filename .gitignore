@@ -37,3 +37,6 @@ vgcore.*
 
 # Testing data
 *.txt
+
+# And of course
+*.noupload

@@ -2,48 +2,48 @@
 #include <cmath>
 
 NeuralNetwork::NeuralNetwork(int inputCount, int floatingCount, int outputCount) :
-	Network(inputCount, {floatingCount}, outputCount) {}
+	Network({inputCount, floatingCount, outputCount}) {}
 
 // Backpropagation method
 Vector NeuralNetwork::train(Vector input, Vector expectedOutput) {
-	// concat the input values to the end of the floating values matrix.
-	// This matrix just gives the output values, so since we want to
-	// relate the input directly to the output in addition to through neuron paths...
-	Vector floatingAndInput = input;
-	for (float x : this->floatingValues)
-		floatingAndInput.push_back(x);
+	// // concat the input values to the end of the floating values matrix.
+	// // This matrix just gives the output values, so since we want to
+	// // relate the input directly to the output in addition to through neuron paths...
+	// Vector floatingAndInput = input;
+	// for (float x : this->floatingValues)
+	// 	floatingAndInput.push_back(x);
 
-	// Calculate the floating layer
-	this->floatingValues = calculateLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
+	// // Calculate the floating layer
+	// this->floatingValues = calculateLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
 
-	Vector output = calculateLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
+	// Vector output = calculateLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
 
 
 
-	// Adjust the connections to the output neurons
-	Vector cost = Network::calculateCost(output, expectedOutput);
-	// Step 1: Adjust Biases for Output Neurons
-	adjustBiases(&this->outputBiases, &cost);
+	// // Adjust the connections to the output neurons
+	// Vector cost = Network::calculateCost(output, expectedOutput);
+	// // Step 1: Adjust Biases for Output Neurons
+	// adjustBiases(&this->outputBiases, &cost);
 
-	//Step 2: Adjust Weights before Output Neurons
-	adjustWeights(&this->floatingWeights, &cost, &floatingAndInput);
+	// //Step 2: Adjust Weights before Output Neurons
+	// adjustWeights(&this->floatingWeights, &cost, &floatingAndInput);
 	
-	// Step 3: Adjust Neurons
-	Vector floatingExpected = adjustNeurons(&this->floatingWeights, &cost, &this->floatingValues);
+	// // Step 3: Adjust Neurons
+	// Vector floatingExpected = adjustNeurons(&this->floatingWeights, &cost, &this->floatingValues);
 	
 
 
-	// // Adjust the connections to the floating neurons
-	cost = Network::calculateCost(this->floatingValues, floatingExpected);
-	// // Step 1: Adjust Biases for Floating Neurons
-	adjustBiases(&this->floatingBiases, &cost);
+	// // // Adjust the connections to the floating neurons
+	// cost = Network::calculateCost(this->floatingValues, floatingExpected);
+	// // // Step 1: Adjust Biases for Floating Neurons
+	// adjustBiases(&this->floatingBiases, &cost);
 
-	// // Step 2: Adjust Weights before Floating Neurons
-	adjustWeights(&this->inputWeights, &cost, &floatingAndInput);
+	// // // Step 2: Adjust Weights before Floating Neurons
+	// adjustWeights(&this->inputWeights, &cost, &floatingAndInput);
 
 
-	// Return the output in case the user wants to use it
-	return output;
+	// // Return the output in case the user wants to use it
+	// return output;
 }
 
 void NeuralNetwork::adjustBiases(Vector* biases, Vector* cost) {

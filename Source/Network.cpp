@@ -1,23 +1,85 @@
 #include "../Headers/Network.hpp"
 #include <cmath>
+#include <cstdlib>
+#include <string>
 
 Network::Network(std::vector<int> neuronCounts) {
+	if (neuronCounts.size() < 2) {
+		std::cerr << "Network must have at least 2 layers given in constructor" << std::endl;
+		exit(1);
+	}
 
 	srand(time(NULL));
 
 	this->randomizeNetwork(neuronCounts);
 }
 
+Network::Network(char* filename) {
+	
+}
+
+void Network::save(char* filename) {
+	std::ofstream file(filename);
+
+	// I don't want to make so many small writes, so I'll have a buffer
+	std::string writeBuffer = "";
+
+	
+	// Values
+	for (int i=0;i<this->values.size();i++) {
+		writeBuffer += '[';
+		for (int l=0;l<this->values[i].size();l++) {
+			writeBuffer += std::to_string(this->values[i][l]);
+		}
+		writeBuffer += ']';
+	}
+
+	writeBuffer += '\n';
+
+	// Biases
+	for (int i=0;i<this->biases.size();i++) {
+		writeBuffer += '[';
+		for (int l=0;l<this->biases[i].size();l++) {
+			writeBuffer += std::to_string(this->biases[i][l]);
+		}
+		writeBuffer += ']';
+	}
+	
+	writeBuffer += '\n';
+
+	// Weights
+	for (int i=0;i<this->weights.size();i++) {
+		writeBuffer += '[';
+		for (int r=0;r<this->weights[i].size();r++) {
+			writeBuffer += '[';
+			for (int c=0;c<this->weights[i][r].size();c++)
+				writeBuffer += std::to_string(this->weights[i][r][c]);
+			writeBuffer += ']';
+		}
+		writeBuffer += ']';
+	}
+
+	// Finally overwrite the file with the writeBuffer
+	file << writeBuffer;
+
+	file.close();
+}
+
 void Network::randomizeNetwork(std::vector<int> neuronCounts) {
-	int layerCount = neuronCounts.size();
+	// Empty the network
+	this->values = std::vector<Vector>(0);
+	this->biases = std::vector<Vector>(0);
+	this->weights = std::vector<Matrix>(0);
+
+	this->layerCount = neuronCounts.size();
 	
 	// Fill values with floats 0. to 1.
-	for (int i=0;i<layerCount - 2;i++) {
+	for (int i=0;i<layerCount;i++) {
 		Vector layer;
 		for (int l=0;l<neuronCounts[i + 1];l++) {
 			layer.push_back(getRandom(0., 1.));
 		}
-		this->biases.push_back(layer);
+		this->values.push_back(layer);
 	}
 
 	// Fill biases with 0
@@ -31,8 +93,8 @@ void Network::randomizeNetwork(std::vector<int> neuronCounts) {
 
 	// Fill weights with floats -4. to 4.
 	for (int i=0;i<layerCount - 1;i++) {
-		int matHeight = neuronCounts[i];
-		int matWidth = neuronCounts[i + 1];
+		int matHeight = neuronCounts[i + 1];
+		int matWidth = neuronCounts[i];
 
 		// Loop through all the rows and columns for this weight matrix
 		Matrix weightsData;
@@ -48,13 +110,17 @@ void Network::randomizeNetwork(std::vector<int> neuronCounts) {
 	}
 }
 
+
+
 // Multiply two matrices together
 // Works even if one or more is a vector (still has to be a 2d vector, 
 // but there is just one element in the second dimension)
 Vector Network::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
-	if (vector.size() != matrix[0].size())
+	if (vector.size() != matrix[0].size()) {
 		std::cerr << "calculateLayer-Network.cpp: Vector and matrix are incompatible, size mismatch."
 		 << "Vector: " << vector.size() << " Matrix: " << matrix[0].size() << std::endl;
+		exit(1);
+	}
 
 	Vector result;
 	// The size of matrix is the number of rows, which is also
@@ -103,8 +169,56 @@ void Network::train(Vector input, Vector expectedOutput) {
 	perform(input);
 
 	// Don't have to return, but if I need to change the return type later...
-	return train(expectedOutput);
+	return this->train(expectedOutput);
 }
+
+void Network::train(Vector expectedOutput) {
+	if (this->values.back().size() != expectedOutput.size()) {
+		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
+		exit(1);
+	}
+
+	Vector expected = expectedOutput;
+
+	// Loop through all layers (recursion but without the downsides)
+	int layer = this->layerCount;
+	while (layer-- > 1) {
+
+		Vector* lastValues = &this->values[layer - 1];
+		Vector* biases = &this->biases[layer - 1];
+		Matrix* weights = &this->weights[layer - 1];
+
+		// For Step 3
+		Vector neuronAdjustments(lastValues->size());
+
+		Vector cost = calculateCost(this->values[layer], expected);
+
+		// Train the connections to each output neuron
+		for (int r=0;r<this->values[layer].size();r++) {
+			
+			// Step 1: Adjust Bias
+			(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
+			
+			// Step 2: Adjust weights
+			for (int l=0;l<lastValues->size();l++) {
+				(*weights)[r][l] += cost[r] * (*lastValues)[l] / WEIGHT_ADJUST_DIVISOR;
+			}
+
+			// Step 3: Adjust neurons
+			for (int l=0;l<lastValues->size();l++) {
+				neuronAdjustments[l] += cost[r] * (*lastValues)[l] / NEURON_ADJUST_DIVISOR;
+			}
+		}
+
+		// // Continuing Step 3: Create the new expected value for the layer before
+		expected.resize(lastValues->size());
+		for (int i=0;i<expected.size();i++) {
+			expected[i] = (*lastValues)[i] + neuronAdjustments[i];
+		}
+	}
+}
+
+
 
 
 // Static methods
