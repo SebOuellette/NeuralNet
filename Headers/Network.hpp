@@ -26,7 +26,12 @@ protected:
 	// networks to be created with only small adjustments
 	int layerCount;
 
-	
+	// Hidden values
+	std::vector<Vector> values;
+	// Biases corresponding to each value
+	std::vector<Vector> biases;
+	// Weights between each layer
+	std::vector<Matrix> weights;
 
 
 	// Initialize values, biases, and weights with random values
@@ -37,15 +42,6 @@ protected:
 	
 
 public:
-
-// Hidden values
-	std::vector<Vector> values;
-	// Biases corresponding to each value
-	std::vector<Vector> biases;
-	// Weights between each layer
-	std::vector<Matrix> weights;
-
-
 	Network(std::vector<int> neuronCounts);
 
 	// Load the network from a file
