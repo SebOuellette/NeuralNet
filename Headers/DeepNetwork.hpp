@@ -23,18 +23,20 @@ private:
 	int instanceCount;
 
 	std::vector<Instance> instances;
+
+	std::vector<Instance> evolveGen();
 	
 public:
 
 	DeepNetwork(int inputCount, int floatingCount, int outputCount, int instanceCount);
 	
 	// Returns 
-	Vector prompts(Vector input);
+	Vector prompt(int index, Vector input);
 
 	std::vector<Instance>* getInstances();
 
 	void propagate();
-	std::vector<Instance> evolveGen();
+	void kill(int index);
 };
 
 #endif // NETWORK_HPP

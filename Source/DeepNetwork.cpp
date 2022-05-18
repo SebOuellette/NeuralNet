@@ -1,7 +1,7 @@
 #include "../Headers/DeepNetwork.hpp"
 
 Instance::Instance(int inputCount, int floatingCount, int outputCount) :
-	Network(inputCount, floatingCount, outputCount) {}
+	Network(inputCount, {floatingCount}, outputCount) {}
 
 void Instance::mutate() {
 	// Generate mutation count
@@ -63,6 +63,10 @@ DeepNetwork::DeepNetwork(int inputCount, int floatingCount, int outputCount, int
 		}
 }
 
+Vector DeepNetwork::prompt(int index, Vector input) {
+	return this->instances[index].prompt(input);
+}
+
 std::vector<Instance>* DeepNetwork::getInstances() {
 	return &this->instances;
 }
@@ -72,14 +76,19 @@ void DeepNetwork::propagate() {
 }
 
 std::vector<Instance> DeepNetwork::evolveGen() {
-	std::vector<Instance> newInstances;
+	std::vector<Instance> newInstances(0, Instance(0,0,0));
 
+	// Fill the new array. Mutates all new children of the surviving instances
 	for (int i=0;i<this->instanceCount;i++) {
-		Instance* randomInstance = &this->instances[rand() % this->instanceCount];
+		Instance* randomInstance = &this->instances[rand() % this->instances.size()-1];
 		
 		newInstances.push_back(*randomInstance);
 		newInstances[i].mutate();
 	}
 
 	return newInstances;
+}
+
+void DeepNetwork::kill(int index) {
+	this->instances.erase(this->instances.begin() + index);
 }

@@ -1,18 +1,21 @@
-CXX = g++
+CXX := g++
+EXE := main
+FOLDER := Source
+#OPTIONS := 
 
-SOURCE_FILES := $(wildcard Source/*.cpp)
-OBJECT_FILES := $(patsubst Source/%.cpp,%.o,$(SOURCE_FILES))
+SOURCE_FILES := $(wildcard $(FOLDER)/*.cpp)
+OBJECT_FILES := $(patsubst $(FOLDER)/%.cpp,%.o,$(SOURCE_FILES))
 
-all: main
+all: $(EXE)
 
-%.o: Source/%.cpp
-	$(CXX) -std=c++0x -c Source/$*.cpp -lpthread
+$(EXE): $(OBJECT_FILES)
+	$(CXX) $(OBJECT_FILES) -o $(EXE) $(OPTIONS)
 
-main: $(OBJECT_FILES)
-	$(CXX)  $(OBJECT_FILES) -o main -lpthread
+%.o: $(FOLDER)/%.cpp
+	$(CXX) -c $(FOLDER)/$*.cpp
 
 valgrind:
-	valgrind ./main
+	valgrind ./$(EXE)
 
 clean:
-	rm -f *.o main vgcore.*
+	rm -f *.o $(EXE) vgcore.*

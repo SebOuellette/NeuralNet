@@ -2,7 +2,7 @@
 #include <cmath>
 
 NeuralNetwork::NeuralNetwork(int inputCount, int floatingCount, int outputCount) :
-	Network(inputCount, floatingCount, outputCount) {}
+	Network(inputCount, {floatingCount}, outputCount) {}
 
 // Backpropagation method
 Vector NeuralNetwork::train(Vector input, Vector expectedOutput) {
@@ -14,9 +14,9 @@ Vector NeuralNetwork::train(Vector input, Vector expectedOutput) {
 		floatingAndInput.push_back(x);
 
 	// Calculate the floating layer
-	this->floatingValues = findNextLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
+	this->floatingValues = calculateLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
 
-	Vector output = findNextLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
+	Vector output = calculateLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
 
 
 

@@ -1,82 +1,60 @@
 #include "../Headers/Network.hpp"
 #include <cmath>
 
-Network::Network(int inputCount, int floatingCount, int outputCount) :
-	inputCount(inputCount),
-	floatingCount(floatingCount),
-	outputCount(outputCount) 
-	{
+Network::Network(std::vector<int> neuronCounts) {
 
 	srand(time(NULL));
 
-	// Randomize the weights 
-	this->setupInputWeights();
-	this->setupFloatingWeights();
+	this->randomizeNetwork(neuronCounts);
+}
 
-	// Randomize the values
-	this->setupFloatingValues();
-
-	// Setup the biases
-	this->setupBiases(&this->floatingBiases, this->floatingCount);
-	this->setupBiases(&this->outputBiases, this->outputCount);
-
+void Network::randomizeNetwork(std::vector<int> neuronCounts) {
+	int layerCount = neuronCounts.size();
 	
-}
-
-void Network::setupInputWeights() {
-	this->setupWeights(&this->inputWeights, this->floatingCount, this->floatingCount + this->inputCount);
-}
-
-void Network::setupFloatingWeights() {
-	this->setupWeights(&this->floatingWeights, this->outputCount, this->floatingCount + this->inputCount);
-}
-
-void Network::setupWeights(Matrix* weights, int rows, int cols) {
-	// Clear the weights
-	weights->clear();
-
-	// Setup the matrix by [rows][columns]
-	for (int r=0;r<rows;r++) {
-		// Add a new row to the matrix
-		std::vector<float> tmpRow;
-		weights->push_back(std::vector<float>());
-		
-		auto row = &(*weights)[r];
-
-		for (int c=0;c<cols;c++) {
-			// Generate a random weight between -4.f and 4.f
-			// with up to 6 decimal points of accuracy 
-			row->push_back(getRandom());
+	// Fill values with floats 0. to 1.
+	for (int i=0;i<layerCount - 2;i++) {
+		Vector layer;
+		for (int l=0;l<neuronCounts[i + 1];l++) {
+			layer.push_back(getRandom(0., 1.));
 		}
+		this->biases.push_back(layer);
 	}
-}
 
-void Network::setupBiases(Vector* biases, int count) {
-	// Clear the biases
-	biases->clear();
-
-	for (int r=0;r<count;r++) {
-		// Biases will all generate with a default value of 0
-		biases->push_back(0);
+	// Fill biases with 0
+	for (int i=0;i<layerCount - 1;i++) {
+		Vector layer;
+		for (int l=0;l<neuronCounts[i + 1];l++) {
+			layer.push_back(getRandom(0., 1.));
+		}
+		this->biases.push_back(layer);
 	}
-}
 
-void Network::setupFloatingValues() {
-	// Clear the values
-	this->floatingValues.clear();
+	// Fill weights with floats -4. to 4.
+	for (int i=0;i<layerCount - 1;i++) {
+		int matHeight = neuronCounts[i];
+		int matWidth = neuronCounts[i + 1];
 
-	// Generate a random number between -1 and 1 for the floating neurons
-	for (int i=0;i<this->floatingCount;i++) {
-		this->floatingValues.push_back(getRandom(-1, 1));
+		// Loop through all the rows and columns for this weight matrix
+		Matrix weightsData;
+		for (int row=0;row<matHeight;row++) {
+			Vector rowData(0);
+			for (int col=0;col<matWidth;col++) {
+				// Add a random data to the coordinate
+				rowData.push_back(getRandom(-4., 4.));
+			}
+			weightsData.push_back(rowData);
+		}
+		this->weights.push_back(weightsData);
 	}
 }
 
 // Multiply two matrices together
 // Works even if one or more is a vector (still has to be a 2d vector, 
 // but there is just one element in the second dimension)
-Vector Network::findNextLayer(Vector vector, Matrix matrix, Vector biases) {
+Vector Network::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
 	if (vector.size() != matrix[0].size())
-		std::cerr << "findNextLayer-Network.cpp: Vector and matrix are incompatible, size mismatch." << std::endl;
+		std::cerr << "calculateLayer-Network.cpp: Vector and matrix are incompatible, size mismatch."
+		 << "Vector: " << vector.size() << " Matrix: " << matrix[0].size() << std::endl;
 
 	Vector result;
 	// The size of matrix is the number of rows, which is also
@@ -107,27 +85,29 @@ Vector Network::findNextLayer(Vector vector, Matrix matrix, Vector biases) {
 	return result;
 }
 
-Vector Network::prompt(Vector input) {
-	// concat the input values to the end of the floating values matrix.
-	// This matrix just gives the output values, so since we want to
-	// relate the input directly to the output in addition to through neuron paths...
-	Vector floatingAndInput = input;
-	for (float x : this->floatingValues)
-		floatingAndInput.push_back(x);
+// Propagate through the network
+Vector Network::perform(Vector input) {
+	this->values[0] = input; // just to make it easy
 
-	// Calculate the floating layer
-	Vector newFloatingValues = findNextLayer(floatingAndInput, this->inputWeights, this->floatingBiases);
+	int layerCount = this->values.size();
 
-	// Calculate output
-	floatingAndInput = input;
-	for (float x : newFloatingValues)
-		floatingAndInput.push_back(x);
+	// Propagate through the network
+	for (int l=0;l<layerCount - 1;l++) {
+		this->values[l+1] = calculateLayer(this->values[l], this->weights[l], this->biases[l]);
+	}
 
-	Vector output = findNextLayer(floatingAndInput, this->floatingWeights, this->outputBiases);
-
-	return output;
+	return this->values.back();
 }
 
+void Network::train(Vector input, Vector expectedOutput) {
+	perform(input);
+
+	// Don't have to return, but if I need to change the return type later...
+	return train(expectedOutput);
+}
+
+
+// Static methods
 Vector Network::calculateCost(Vector actual, Vector expected) {
 	// The vector containing the cost of the output
 	Vector cost(actual.size());

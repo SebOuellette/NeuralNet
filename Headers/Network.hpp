@@ -18,43 +18,41 @@ typedef std::vector<float> Vector;
 typedef std::vector<std::vector<float>> Matrix;
 
 
+// The base network class which holds the structure of any supported network
+// Also contains essential network methods
 class Network {
 protected:
-	int inputCount;
-	int floatingCount;
-	int outputCount;
+	// New
+	// This base network class is an ANN structure to allow most other types of 
+	// networks to be created with only small adjustments
 
-	// Rows := floatingCount
-	// Columns := floatingCount + inputCount
-	// The first "Columns" columns will be multiplied by the floating neurons
-	// you are trying to calculate
-	Matrix inputWeights;
-	// Rows := outputCount
-	// Width := floatingCount + inputCount
-	Matrix floatingWeights;
-
-	// list of floating neurons' values
-	Vector floatingValues;
-
-	// Vectors of biases
-	Vector floatingBiases;
-	Vector outputBiases;
+	// Hidden values
+	std::vector<Vector> values;
+	// Biases corresponding to each value
+	std::vector<Vector> biases;
+	// Weights between each layer
+	std::vector<Matrix> weights;
 
 
-	void setupWeights(Matrix* weights, int rows, int cols);
-	void setupBiases(Vector* biases, int count);
-	void setupInputWeights();
-	void setupFloatingWeights();
-	void setupFloatingValues();
+	// Initialize values, biases, and weights with random values
+	void randomizeNetwork(std::vector<int> neuronCounts);
 
-	Vector findNextLayer(Vector vector, Matrix matrix, Vector biases);
+	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
+	
 
 public:
 
-	Network(int inputCount, int floatingCount, int outputCount);
+	Network(std::vector<int> neuronCounts);
 	
-	// Calculates the network output given some input value(s)
-	Vector prompt(Vector input);
+	// Propagates through the network
+	// Returns the output
+	Vector perform(Vector input);
+
+	// Backpropagates through the network's current state
+	void train(Vector expectedOutput);
+	// Propagates through the network with a given input, 
+	// then backpropagates with a given expected output
+	void train(Vector input, Vector expectedOutput);
 
 	static Vector calculateCost(Vector actual, Vector expected);
 	static void printVector(Vector vec);
