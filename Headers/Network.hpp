@@ -12,9 +12,9 @@
 #include <thread>
 #include "Functions.hpp"
 
-#define BIAS_ADJUST_DIVISOR 1000.f
-#define WEIGHT_ADJUST_DIVISOR 1000.f
-#define NEURON_ADJUST_DIVISOR 1000.f
+#define BIAS_ADJUST_DIVISOR 500.f
+#define WEIGHT_ADJUST_DIVISOR 600.f
+#define NEURON_ADJUST_DIVISOR 500.f
 
 typedef std::vector<float> Vector;
 typedef std::vector<std::vector<float>> Matrix;
