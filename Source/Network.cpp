@@ -1,4 +1,5 @@
 #include "../Headers/Network.hpp"
+#include <cstring>
 #include <thread>
 
 Network::Network(std::vector<int> neuronCounts) {
@@ -247,15 +248,20 @@ Vector Network::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
 }
 
 // Propagate through the network
-Vector Network::perform(Vector input) {
-	this->values[0] = input; // just to make it easy
+void Network::performBackend(Vector input, Network* thisCopy) {
+	thisCopy->values[0] = input; // Just to make it easy
 
-	int layerCount = this->values.size();
+	int layerCount = thisCopy->values.size();
 
 	// Propagate through the network
 	for (int l=0;l<layerCount - 1;l++) {
-		this->values[l+1] = calculateLayer(this->values[l], this->weights[l], this->biases[l]);
+		thisCopy->values[l+1] = calculateLayer(thisCopy->values[l], thisCopy->weights[l], thisCopy->biases[l]);
 	}
+}
+
+// Propagate through the network & return the output layer
+Vector Network::perform(Vector input) {
+	this->performBackend(input, this);
 
 	return this->values.back();
 }
@@ -265,46 +271,75 @@ void Network::prepareBatches(int batchSize, int trainingSamples) {
 	this->trainingSamples = trainingSamples;
 }
 
-void Network::batch(Vector input, Vector expectedOutput) {
-	if (this->values.back().size() != expectedOutput.size()) {
-		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
+void Network::batch(Matrix input, Matrix expectedOutput) {
+	for (Vector expected : expectedOutput) {
+		if (this->values.back().size() != expected.size()) {
+			std::cerr << "Network batch: expected output not the same size as actual output" << std::endl;
+			exit(1);
+		}
+	}
+
+	if (input.size() != expectedOutput.size()) {
+		std::cerr << "Network batch: Must provide the same number of inputs and corresponding outputs" << std::endl;
 		exit(1);
 	}
 
-	this->perform(input);
+	auto averageInto = [&](Network* actualNetwork, Network* secondNetwork){
+		// Average out the current training data and the result of the training data in this copy
+		// Values
+		for (int v=0;v<actualNetwork->values.size();v++) {
+			for (int r=0;r<actualNetwork->values[v].size();r++) {
+				actualNetwork->values[v][r] += secondNetwork->values[v][r];
+				actualNetwork->values[v][r] /= 2.;
+			}
+		}
 
-	this->batch(expectedOutput);
-}
+		// Biases
+		for (int b=0;b<actualNetwork->biases.size();b++) {
+			for (int r=0;r<actualNetwork->biases[b].size();r++) {
+				actualNetwork->biases[b][r] += secondNetwork->biases[b][r];
+				actualNetwork->biases[b][r] /= 2.;
+			}
+		}
 
-void Network::batch(Vector expectedOutput) {
-	if (this->values.back().size() != expectedOutput.size()) {
-		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
-		exit(1);
-	}
+		// Weights
+		for (int w=0;w<actualNetwork->weights.size();w++) {
+			for (int r=0;r<actualNetwork->weights[w].size();r++) {
+				for (int c=0;c<actualNetwork->weights[w][r].size();c++) {
+					actualNetwork->weights[w][r][c] += secondNetwork->weights[w][r][c];
+					actualNetwork->weights[w][r][c] /= 2.;
+				}
+			}
+		}
+	};
 
-	std::vector<std::thread*> threads;
+	std::vector<std::thread*> threads(this->batchSize);
+	std::vector<Network*> networkCopies(this->batchSize);
 
 	for(int t=0;t<this->batchSize;t++) {
-		threads.push_back(new std::thread([&] {
-			for (int trainingCycle=0;trainingCycle<this->trainingSamples;trainingCycle++) {
+		auto threadFunc = [input, expectedOutput, &averageInto, &networkCopies](Network* thisCopy, Network* actualNetwork) {
 
-				Vector expected = expectedOutput;
+			for (int trainingCycle=0;trainingCycle<thisCopy->trainingSamples;trainingCycle++) {
+				
+				// Cycle through the training data to ensure we evenly spread the training
+				thisCopy->performBackend(input[trainingCycle % input.size()], thisCopy);
+				Vector expected = expectedOutput[trainingCycle % expectedOutput.size()];
 
 				// Loop through all layers (recursion but without the downsides)
-				int layer = this->layerCount;
+				int layer = thisCopy->layerCount;
 				while (layer-- > 1) {
 
-					Vector* lastValues = &this->values[layer - 1];
-					Vector* biases = &this->biases[layer - 1];
-					Matrix* weights = &this->weights[layer - 1];
+					Vector* lastValues = &thisCopy->values[layer - 1];
+					Vector* biases = &thisCopy->biases[layer - 1];
+					Matrix* weights = &thisCopy->weights[layer - 1];
 
 					// For Step 3
 					Vector neuronAdjustments(lastValues->size());
 
-					Vector cost = calculateCost(this->values[layer], expected);
+					Vector cost = calculateCost(thisCopy->values[layer], expected);
 
 					// Train the connections to each output neuron
-					for (int r=0;r<this->values[layer].size();r++) {
+					for (int r=0;r<thisCopy->values[layer].size();r++) {
 						
 						// Step 1: Adjust Bias
 						(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
@@ -328,13 +363,37 @@ void Network::batch(Vector expectedOutput) {
 				}
 			}
 
-		}));
+			// Only if we could get write access, add to the main thread
+			// If somebody si already writing, we just skip and add to our local thread again. 
+			// This solution has no waiting times, and no lost computations.
+			if (actualNetwork->lock()) {
+				averageInto(actualNetwork, thisCopy);
+				*thisCopy = *actualNetwork;
+				
+				actualNetwork->unlock();
+			}
+			
+		};
+
+		//A copy of this is made for each thread, afterwards they are all joined together
+		networkCopies[t] = new Network(*this);
+		Network* thisCopy = networkCopies[t];
+
+		// thisCopy must be passed as an argument or it corrupts and you get segfaults
+		threads[t] = new std::thread(threadFunc, thisCopy, this);
 	}
 
 	// Join the threads
-	for (int i=0;i<batchSize;i++) {
+	for (int i=0;i<threads.size();i++) {
 		threads[i]->join();
 		delete threads[i];
+	}
+
+	// Join the copies into the actual network for a final time, just incase any were missed
+	for (int i=0;i<networkCopies.size();i++) {
+		averageInto(this, networkCopies[i]);
+
+		delete networkCopies[i];
 	}
 }
 
@@ -343,8 +402,6 @@ void Network::train(Vector expectedOutput) {
 		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
 		exit(1);
 	}
-
-	
 }
 
 void Network::print() {
@@ -364,7 +421,19 @@ void Network::print() {
 	}
 }
 
+bool Network::lock() {
+	// Poll to check if no other thread is writing
+	if (this->writing) return false;
 
+	// grab write access
+	this->writing = true;
+	return true;
+}
+
+void Network::unlock() {
+	// Free write access
+	this->writing = false;
+}
 
 
 // Static methods

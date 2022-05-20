@@ -40,3 +40,5 @@ vgcore.*
 
 # And of course
 *.noupload
+Dataset/
+Dataset/*

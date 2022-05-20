@@ -5,34 +5,35 @@
 //#include "../Headers/DeepNetwork.hpp"
 #include "../Headers/Network.hpp"
 
-// Keep at ~18 and ~100 for optimal results
-#define BATCH_SIZE 18
-#define BATCH_SAMPLES 100
-// Can be whatever
-#define TRAINING_SAMPLES 100
+#define STB_IMAGE_IMPLEMENTATION
+#include "../Libraries/stb/stb_image.h"
+
+// Batch size of 1 for less than like infinite neurons, it's not faster
+#define BATCH_SIZE 32
+#define BATCH_SAMPLES 500
 
 int main(int argc, char* argv[]) {
-	Network network({3, 10, 10, 3});
+
+	// stbi_load();
+
+
+	Network network({3, 10, 3});
 
 	network.prepareBatches(BATCH_SIZE, BATCH_SAMPLES);
 
-	for (int i=0;i<TRAINING_SAMPLES;i++) {
-		network.batch({0, 0, 0}, {1, 1, 1});
-		network.batch({0, 0, 1}, {1, 1, 0});
-		network.batch({0, 1, 0}, {1, 0, 1});
-		network.batch({0, 1, 1}, {1, 0, 0});
-		network.batch({1, 0, 0}, {0, 1, 1});
-		
-		network.batch({1, 0, 1}, {0, 1, 0});
-		
-		network.batch({1, 1, 0}, {0, 0, 1});
-		network.batch({1, 1, 1}, {0, 0, 0});
-	}
+	network.batch(
+		// Inputs
+		{{0, 0, 0},{0, 0, 1},{0, 1, 0},{0, 1, 1},
+		 {1, 0, 0},{1, 0, 1},{1, 1, 0},{1, 1, 1}}, 
+
+		// Corresponding expected outputs
+		{{1, 1, 1},{1, 1, 0},{1, 0, 1},{1, 0, 0},
+		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}}
+	);
 
 	//Network::printVector(network.perform({1, 0, 1}));
 
 	network.perform({1, 0, 1});
-
 	network.print();
 
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
 	Network::printVector(Network::calculateCost(network.perform({1, 0, 1}), {0, 1, 0}));
 
 
-	network.save("savefile.noupload");
+	//network.save("savefile.noupload");
 
 	// Init
 	// float x[INSTANCE_COUNT] = {0};

@@ -12,9 +12,9 @@
 #include <thread>
 #include "Functions.hpp"
 
-#define BIAS_ADJUST_DIVISOR 500.f
-#define WEIGHT_ADJUST_DIVISOR 600.f
-#define NEURON_ADJUST_DIVISOR 500.f
+#define BIAS_ADJUST_DIVISOR 50.f
+#define WEIGHT_ADJUST_DIVISOR 60.f
+#define NEURON_ADJUST_DIVISOR 50.f
 
 typedef std::vector<float> Vector;
 typedef std::vector<std::vector<float>> Matrix;
@@ -46,14 +46,22 @@ protected:
 	// Multiprocessing stuff
 	int batchSize = 1;
 	int trainingSamples = 1;
+	bool writing = false;
+
+	// Returns false if thread is already writing
+	bool lock();
+	// Frees write access
+	void unlock();
 
 	// Backpropagates through the network's current state
 	void train(Vector expectedOutput);
 	// Propagates through the network with a given input, 
 	// then backpropagates with a given expected output
 	// void train(Vector input, Vector expectedOutput);
-	
-	
+
+	// Propagates through a given network copy, to be used for multithreading
+	void performBackend(Vector input, Network* thisCopy);
+
 
 public:
 	Network(std::vector<int> neuronCounts);
@@ -66,8 +74,7 @@ public:
 	Vector perform(Vector input);
 
 	// Backpropagates through the network same as train, but using multithreading
-	void batch(Vector expectedOutput);
-	void batch(Vector input, Vector expectedOutput);
+	void batch(Matrix input, Matrix expectedOutput);
 
 
 	// Save the network to a file
