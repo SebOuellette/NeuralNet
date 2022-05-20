@@ -369,7 +369,7 @@ void Network::batch(Matrix input, Matrix expectedOutput) {
 			if (actualNetwork->lock()) {
 				averageInto(actualNetwork, thisCopy);
 				*thisCopy = *actualNetwork;
-				
+
 				actualNetwork->unlock();
 			}
 			
@@ -394,13 +394,6 @@ void Network::batch(Matrix input, Matrix expectedOutput) {
 		averageInto(this, networkCopies[i]);
 
 		delete networkCopies[i];
-	}
-}
-
-void Network::train(Vector expectedOutput) {
-	if (this->values.back().size() != expectedOutput.size()) {
-		std::cerr << "Network training: expected output not the same size as actual output" << std::endl;
-		exit(1);
 	}
 }
 

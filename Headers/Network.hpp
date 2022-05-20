@@ -24,7 +24,6 @@ typedef std::vector<std::vector<float>> Matrix;
 // Also contains essential network methods
 class Network {
 protected:
-	// New
 	// This base network class is an ANN structure to allow most other types of 
 	// networks to be created with only small adjustments
 	int layerCount = 2;
@@ -52,12 +51,6 @@ protected:
 	bool lock();
 	// Frees write access
 	void unlock();
-
-	// Backpropagates through the network's current state
-	void train(Vector expectedOutput);
-	// Propagates through the network with a given input, 
-	// then backpropagates with a given expected output
-	// void train(Vector input, Vector expectedOutput);
 
 	// Propagates through a given network copy, to be used for multithreading
 	void performBackend(Vector input, Network* thisCopy);
