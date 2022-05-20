@@ -39,6 +39,7 @@ vgcore.*
 *.txt
 
 # And of course
-*.noupload
+*.noupload*
 Dataset/
 Dataset/*
+.vscode/

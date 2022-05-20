@@ -266,12 +266,7 @@ Vector Network::perform(Vector input) {
 	return this->values.back();
 }
 
-void Network::prepareBatches(int batchSize, int trainingSamples) {
-	this->batchSize = batchSize;
-	this->trainingSamples = trainingSamples;
-}
-
-void Network::batch(Matrix input, Matrix expectedOutput) {
+void Network::batch(Matrix input, Matrix expectedOutput, int trainingCycles, int batchSize) {
 	for (Vector expected : expectedOutput) {
 		if (this->values.back().size() != expected.size()) {
 			std::cerr << "Network batch: expected output not the same size as actual output" << std::endl;
@@ -313,13 +308,13 @@ void Network::batch(Matrix input, Matrix expectedOutput) {
 		}
 	};
 
-	std::vector<std::thread*> threads(this->batchSize);
-	std::vector<Network*> networkCopies(this->batchSize);
+	std::vector<std::thread*> threads(batchSize);
+	std::vector<Network*> networkCopies(batchSize);
 
-	for(int t=0;t<this->batchSize;t++) {
-		auto threadFunc = [input, expectedOutput, &averageInto, &networkCopies](Network* thisCopy, Network* actualNetwork) {
+	for(int t=0;t<batchSize;t++) {
+		auto threadFunc = [&](Network* thisCopy, Network* actualNetwork) {
 
-			for (int trainingCycle=0;trainingCycle<thisCopy->trainingSamples;trainingCycle++) {
+			for (int trainingCycle=0;trainingCycle<trainingCycles / batchSize;trainingCycle++) {
 				
 				// Cycle through the training data to ensure we evenly spread the training
 				thisCopy->performBackend(input[trainingCycle % input.size()], thisCopy);

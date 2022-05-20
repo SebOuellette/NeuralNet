@@ -5,21 +5,11 @@
 //#include "../Headers/DeepNetwork.hpp"
 #include "../Headers/Network.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../Libraries/stb/stb_image.h"
-
-// Batch size of 1 for less than like infinite neurons, it's not faster
-#define BATCH_SIZE 32
-#define BATCH_SAMPLES 500
-
 int main(int argc, char* argv[]) {
 
 	// stbi_load();
 
-
-	Network network({3, 10, 3});
-
-	network.prepareBatches(BATCH_SIZE, BATCH_SAMPLES);
+	Network network({3, 10, 3}, "savefile.noupload");
 
 	network.batch(
 		// Inputs
@@ -28,7 +18,13 @@ int main(int argc, char* argv[]) {
 
 		// Corresponding expected outputs
 		{{1, 1, 1},{1, 1, 0},{1, 0, 1},{1, 0, 0},
-		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}}
+		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}},
+
+		// Total training cycles across threads
+		50000000,
+
+		// Thread count
+		16
 	);
 
 	//Network::printVector(network.perform({1, 0, 1}));
@@ -41,7 +37,7 @@ int main(int argc, char* argv[]) {
 	Network::printVector(Network::calculateCost(network.perform({1, 0, 1}), {0, 1, 0}));
 
 
-	//network.save("savefile.noupload");
+	network.save("savefile.noupload");
 
 	// Init
 	// float x[INSTANCE_COUNT] = {0};

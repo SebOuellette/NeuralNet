@@ -1,6 +1,8 @@
 #ifndef RECURRENT_NETWORK_HPP
 #define RECURRENT_NETWORK_HPP
 
+
+
 #include "Network.hpp"
 
 class RecurrentNetwork : public Network {

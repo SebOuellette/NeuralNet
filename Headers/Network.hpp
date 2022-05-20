@@ -43,10 +43,7 @@ protected:
 	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
 
 	// Multiprocessing stuff
-	int batchSize = 1;
-	int trainingSamples = 1;
 	bool writing = false;
-
 	// Returns false if thread is already writing
 	bool lock();
 	// Frees write access
@@ -61,25 +58,19 @@ public:
 
 	// Load the network from a file
 	Network(std::vector<int> neuronCounts, std::string filename);
-	
-	// Propagates through the network
-	// Returns the output
-	Vector perform(Vector input);
-
-	// Backpropagates through the network same as train, but using multithreading
-	void batch(Matrix input, Matrix expectedOutput);
-
-
 	// Save the network to a file
 	void save(std::string filename);
 
+	// Propagates through the network
+	// Returns the output
+	Vector perform(Vector input);
+	// Backpropagates through the network same as train, but using multithreading
+	// Batch size should pretty much always be the number of virtual processors in the machine
+	void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1);
 
 	// print the network to stdout
 	void print();
-
-	// Set the batch size and training samples to use when training batches
-	void prepareBatches(int batchSize, int trainingSamples);
-
+	
 	static Vector calculateCost(Vector actual, Vector expected);
 	static void printVector(Vector vec);
 	static void printMatrix(Matrix matrix);
