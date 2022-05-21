@@ -25,9 +25,13 @@ Network::Network(std::vector<int> neuronCounts, std::string filename) {
 void Network::loadNetwork(std::vector<int> neuronCounts, std::string filename) {
 	std::ifstream file(filename);
 
+	// If the savefile wasn't found, randomize the network instead
 	if (!file) {
-		std::cerr << filename << " failed to open" << std::endl;
-		exit(1);
+		std::cerr << filename << " failed to open, randomizing network" << std::endl;
+		
+		this->randomizeNetwork(neuronCounts);
+
+		return;
 	}
 
 	// if I need to throw crap out, here's where I throw it
