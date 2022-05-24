@@ -7,9 +7,7 @@
 #define WEIGHT_ADJUST_DIVISOR 60.f
 #define NEURON_ADJUST_DIVISOR 50.f
 
-
-// The base network class which holds the structure of any supported network
-// Also contains essential network methods
+// The Artificial Network Class
 class ArtificialNetwork : public Network {
 protected:
 	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases) override;

@@ -58,8 +58,8 @@ protected:
 
 
 public:
+	// Randomize network
 	Network(std::vector<int> neuronCounts);
-
 	// Load the network from a file
 	Network(std::vector<int> neuronCounts, std::string filename);
 	// Save the network to a file

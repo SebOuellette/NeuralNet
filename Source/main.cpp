@@ -4,6 +4,7 @@
 //#include "../Headers/NeuralNetwork.hpp"
 //#include "../Headers/DeepNetwork.hpp"
 #include "../Headers/ArtificialNetwork.hpp"
+#include "../Headers/RecurrentNetwork.hpp"
 
 int main(int argc, char* argv[]) {
 

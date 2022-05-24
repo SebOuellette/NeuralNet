@@ -1,34 +1,32 @@
 #ifndef RECURRENT_NETWORK_HPP
 #define RECURRENT_NETWORK_HPP
-#include "Network.hpp"
-
-
 
 #include "Network.hpp"
 
-// class RecurrentNetwork : public Network {
-// private:
-// 	// Initialize values, biases, and weights with random values
-// 	void randomizeNetwork(std::vector<int> neuronCounts);
-// 	void loadNetwork(std::vector<int> neuronCounts, std::string filename);
+#define BIAS_ADJUST_DIVISOR 50.f
+#define WEIGHT_ADJUST_DIVISOR 60.f
+#define NEURON_ADJUST_DIVISOR 50.f
 
-// 	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
+// The Recurrent Network class
+class RecurrentNetwork : public Network {
+protected:
+	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases) override;
 
-// 	// Multiprocessing
-// 	// Propagates through a given network copy, to be used for multithreading
-// 	void performBackend(Vector input, Network* thisCopy);
-// public:
-// 	RecurrentNetwork(std::vector<int> neuronCounts);
-// 	RecurrentNetwork(std::vector<int> neuronCounts, std::string filename);
+	// Propagates through a given network copy, to be used for multithreading
+	void performBackend(Vector input, Network* thisCopy) override;
 
-// 	// Save the network to a file
-// 	void save(std::string filename);
+	std::vector<int> getWeightSize(int layer) override;
 
-// 	// Propagates through the network
-// 	// Returns the output
-// 	Vector perform(Vector input);
-// 	// Backpropagates through the network
-// 	void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1);
-// };
+
+public:
+	RecurrentNetwork(std::vector<int> neuronCounts);
+
+	// Load the network from a file
+	RecurrentNetwork(std::vector<int> neuronCounts, std::string filename);
+
+	// Backpropagates through the network using multithreading
+	// Batch size should pretty much always be the number of virtual processors in the machine
+	void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1) override;
+};
 
 #endif // RECURRENT_NETWORK_HPP

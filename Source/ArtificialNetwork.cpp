@@ -1,6 +1,4 @@
 #include "../Headers/ArtificialNetwork.hpp"
-#include <cstring>
-#include <thread>
 
 ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts) :
 	Network(neuronCounts) {
@@ -8,10 +6,6 @@ ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts) :
 		std::cerr << "Artificial Network must have 2 or 3 layers given in constructor" << std::endl;
 		exit(1);
 	}
-
-	srand(time(NULL));
-
-	this->randomizeNetwork(neuronCounts);
 }
 
 ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts, std::string filename) : 
@@ -20,8 +14,6 @@ ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts, std::string 
 		std::cerr << "Artificial Network must have 2 or 3 layers given in constructor" << std::endl;
 		exit(1);
 	}
-
-	this->loadNetwork(neuronCounts, filename);
 }
 
 std::vector<int> ArtificialNetwork::getWeightSize(int layer) {
@@ -31,7 +23,10 @@ std::vector<int> ArtificialNetwork::getWeightSize(int layer) {
 	}
 
 	return {
+		// Height / Rows
 		int(this->values[layer + 1].size()),
+
+		// Width / Columns
 		int(this->values[layer].size())
 	};
 }

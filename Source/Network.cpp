@@ -1,12 +1,14 @@
 #include "../Headers/Network.hpp"
-#include <cstring>
-#include <thread>
 
 Network::Network(std::vector<int> neuronCounts) {
 	if (neuronCounts.size() < 2) {
 		std::cerr << "Network must have at least 2 layers given in constructor" << std::endl;
 		exit(1);
 	}
+
+	srand(time(NULL));
+
+	this->randomizeNetwork(neuronCounts);
 }
 
 Network::Network(std::vector<int> neuronCounts, std::string filename) {
@@ -14,6 +16,8 @@ Network::Network(std::vector<int> neuronCounts, std::string filename) {
 		std::cerr << "Network must have at least 2 layers given in constructor" << std::endl;
 		exit(1);
 	}
+
+	this->loadNetwork(neuronCounts, filename);
 }
 
 Vector Network::perform(Vector input) {
