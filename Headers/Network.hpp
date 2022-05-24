@@ -10,7 +10,8 @@
 #include <ios>
 #include <string>
 #include <thread>
-#include "Functions.hpp"
+
+#define e 2.71828182846
 
 #define BIAS_ADJUST_DIVISOR 50.f
 #define WEIGHT_ADJUST_DIVISOR 60.f
@@ -40,7 +41,10 @@ protected:
 	void randomizeNetwork(std::vector<int> neuronCounts);
 	void loadNetwork(std::vector<int> neuronCounts, std::string filename);
 
-	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
+	virtual Vector calculateLayer(Vector vector, Matrix matrix, Vector biases) = 0;
+	
+	// Returns 2d array of length 2, height and width respectivly
+	virtual std::vector<int> getWeightSize(int layer) = 0;
 
 	// Multiprocessing stuff
 	bool writing = false;
@@ -50,7 +54,7 @@ protected:
 	void unlock();
 
 	// Propagates through a given network copy, to be used for multithreading
-	void performBackend(Vector input, Network* thisCopy);
+	virtual void performBackend(Vector input, Network* thisCopy) = 0;
 
 
 public:
@@ -64,16 +68,37 @@ public:
 	// Propagates through the network
 	// Returns the output
 	Vector perform(Vector input);
-	// Backpropagates through the network same as train, but using multithreading
+	// Backpropagates through the network using multithreading
 	// Batch size should pretty much always be the number of virtual processors in the machine
-	void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1);
+	virtual void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1) = 0;
 
 	// print the network to stdout
 	void print();
+
+
+	// Just crap getters and setters cause I have to
+	// And also cause integrating the values into your own projects has obvious benefits
+	std::vector<Vector> getValues();
+	std::vector<Vector> getBiases();
+	std::vector<Matrix> getWeights();
+
+	// Setters
+	void setValues(int layer, Vector values);
+	void setValue(int layer, int index, float value);
+
+	void setBiases(int layer, Vector biases);
+	void setBias(int layer, int index, float value);
+
+	void setWeights(int layer, Matrix weights);
+	void setWeights(int layer, int row, Vector weights);
+	void setWeight(int layer, int row, int index, float weight);
 	
+	// Static methods for general functions
 	static Vector calculateCost(Vector actual, Vector expected);
 	static void printVector(Vector vec);
 	static void printMatrix(Matrix matrix);
+	static float ReLU(float x);
+	static float getRandom(float low, float high);
 };
 
 #endif // NETWORK_HPP

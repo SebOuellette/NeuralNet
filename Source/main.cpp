@@ -3,13 +3,13 @@
 #include <iterator>
 //#include "../Headers/NeuralNetwork.hpp"
 //#include "../Headers/DeepNetwork.hpp"
-#include "../Headers/Network.hpp"
+#include "../Headers/ArtificialNetwork.hpp"
 
 int main(int argc, char* argv[]) {
 
 	// stbi_load();
 
-	Network network({3, 10, 3}, "savefile.noupload");
+	ArtificialNetwork network({3, 10, 3}, "savefile.noupload");
 
 	network.batch(
 		// Inputs
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}},
 
 		// Total training cycles across threads
-		5000000,
+		500000,
 
 		// Thread count
 		16

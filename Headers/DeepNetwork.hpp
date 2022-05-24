@@ -8,35 +8,35 @@
 #define MUTATION_ADJUSTMENT 0.001
 
 
-class Instance : public Network {
-private:
-public:
-	Instance(int inputCount, int floatingCount, int outputCount);
-	void mutate();
-};
+// class Instance : public Network {
+// private:
+// public:
+// 	Instance(int inputCount, int floatingCount, int outputCount);
+// 	void mutate();
+// };
 
-class DeepNetwork {
-private:
-	int inputCount;
-	int floatingCount;
-	int outputCount;
-	int instanceCount;
+// class DeepNetwork {
+// private:
+// 	int inputCount;
+// 	int floatingCount;
+// 	int outputCount;
+// 	int instanceCount;
 
-	std::vector<Instance> instances;
+// 	std::vector<Instance> instances;
 
-	std::vector<Instance> evolveGen();
+// 	std::vector<Instance> evolveGen();
 	
-public:
+// public:
 
-	DeepNetwork(int inputCount, int floatingCount, int outputCount, int instanceCount);
+// 	DeepNetwork(int inputCount, int floatingCount, int outputCount, int instanceCount);
 	
-	// Returns 
-	Vector prompt(int index, Vector input);
+// 	// Returns 
+// 	Vector prompt(int index, Vector input);
 
-	std::vector<Instance>* getInstances();
+// 	std::vector<Instance>* getInstances();
 
-	void propagate();
-	void kill(int index);
-};
+// 	void propagate();
+// 	void kill(int index);
+// };
 
 #endif // NETWORK_HPP
