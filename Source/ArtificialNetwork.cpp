@@ -6,6 +6,8 @@ ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts) :
 		std::cerr << "Artificial Network must have 2 or 3 layers given in constructor" << std::endl;
 		exit(1);
 	}
+
+	this->randomizeNetwork(neuronCounts);
 }
 
 ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts, std::string filename) : 
@@ -14,6 +16,8 @@ ArtificialNetwork::ArtificialNetwork(std::vector<int> neuronCounts, std::string 
 		std::cerr << "Artificial Network must have 2 or 3 layers given in constructor" << std::endl;
 		exit(1);
 	}
+
+	this->loadNetwork(neuronCounts, filename);
 }
 
 std::vector<int> ArtificialNetwork::getWeightSize(int layer) {
@@ -31,44 +35,7 @@ std::vector<int> ArtificialNetwork::getWeightSize(int layer) {
 	};
 }
 
-// Multiply two matrices together
-// Works even if one or more is a vector (still has to be a 2d vector, 
-// but there is just one element in the second dimension)
-Vector ArtificialNetwork::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
-	if (vector.size() != matrix[0].size()) {
-		std::cerr << "calculateLayer-Network.cpp: Vector and matrix are incompatible, size mismatch."
-		 << "Vector: " << vector.size() << " Matrix: " << matrix[0].size() << std::endl;
-		exit(1);
-	}
 
-	Vector result;
-	// The size of matrix is the number of rows, which is also
-	// the number of rows of the output vector
-	for (int r=0;r< matrix.size() ;r++) {
-		float sum = 0;
-
-		// Loop through all the "input" neurons and multiply by the weights matrix columns
-		for (int i=0;i< vector.size() ;i++) {
-			sum += vector[i] * matrix[r][i];
-		}
-
-		// When multiplying matrices, all the columns are multiplied by the
-		// rows of the input vector, then those products are added together to get
-		// the row of the output vector. so now we need to put that sum in the 
-		// next row of the result
-
-		// Add the bias corrosponding to this neuron
-		sum += biases[r];
-
-		// Finally, the resulting value must be constrained
-		sum = ReLU(sum);
-
-		// Next we set the "sum" as the row of the vector
-		result.push_back(sum);
-	}
-
-	return result;
-}
 
 // Propagate through the network
 void ArtificialNetwork::performBackend(Vector input, Network* thisCopy) {

@@ -41,7 +41,7 @@ protected:
 	void randomizeNetwork(std::vector<int> neuronCounts);
 	void loadNetwork(std::vector<int> neuronCounts, std::string filename);
 
-	virtual Vector calculateLayer(Vector vector, Matrix matrix, Vector biases) = 0;
+	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases);
 	
 	// Returns 2d array of length 2, height and width respectivly
 	virtual std::vector<int> getWeightSize(int layer) = 0;

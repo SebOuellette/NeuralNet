@@ -8,7 +8,7 @@ Network::Network(std::vector<int> neuronCounts) {
 
 	srand(time(NULL));
 
-	this->randomizeNetwork(neuronCounts);
+	// Cannot randomize network here because it depends on child class's getWeightSize override
 }
 
 Network::Network(std::vector<int> neuronCounts, std::string filename) {
@@ -17,7 +17,7 @@ Network::Network(std::vector<int> neuronCounts, std::string filename) {
 		exit(1);
 	}
 
-	this->loadNetwork(neuronCounts, filename);
+	// Cannot load network here because it depends on child class's getWeightSize override
 }
 
 Vector Network::perform(Vector input) {
@@ -161,6 +161,43 @@ void Network::loadNetwork(std::vector<int> neuronCounts, std::string filename) {
 
 	
 	file.close();
+}
+
+// Multiply a provided input by a given weight matrix, and add biases to produce an output vector
+Vector Network::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
+	if (vector.size() > matrix[0].size()) {
+		std::cerr << "calculateLayer-Network.cpp: Vector and matrix are incompatible, size mismatch."
+		 << "Vector: " << vector.size() << " Matrix: " << matrix[0].size() << std::endl;
+		exit(1);
+	}
+
+	Vector result;
+	// The size of matrix is the number of rows, which is also
+	// the number of rows of the output vector
+	for (int r=0;r< matrix.size() ;r++) {
+		float sum = 0;
+
+		// Loop through all the "input" neurons and multiply by the weights matrix columns
+		for (int i=0;i< vector.size() ;i++) {
+			sum += vector[i] * matrix[r][i];
+		}
+
+		// When multiplying matrices, all the columns are multiplied by the
+		// rows of the input vector, then those products are added together to get
+		// the row of the output vector. so now we need to put that sum in the 
+		// next row of the result
+
+		// Add the bias corrosponding to this neuron
+		sum += biases[r];
+
+		// Finally, the resulting value must be constrained
+		sum = ReLU(sum);
+
+		// Next we set the "sum" as the row of the vector
+		result.push_back(sum);
+	}
+
+	return result;
 }
 
 void Network::save(std::string filename) {

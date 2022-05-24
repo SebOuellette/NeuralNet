@@ -2,7 +2,7 @@ CXX := g++
 EXE := main
 FOLDER := Source
 LINKER_OPTS := -lpthread
-COMPILE_OPTS := #-g
+COMPILE_OPTS := -g
 
 SOURCE_FILES := $(wildcard $(FOLDER)/*.cpp)
 OBJECT_FILES := $(patsubst $(FOLDER)/%.cpp,%.o,$(SOURCE_FILES))

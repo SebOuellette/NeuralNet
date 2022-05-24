@@ -1,26 +1,29 @@
 #include "../Headers/RecurrentNetwork.hpp"
 
-RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts) :
-	Network(neuronCounts) {
+RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts, int lookbackSize) :
+	Network(neuronCounts),
+	lookbackSize(lookbackSize) {
 	if (neuronCounts.size() < 2 || neuronCounts.size() > 3) {
 		std::cerr << "Recurrent networks may only have 2 or 3 layers" << std::endl;
 		exit(1);
 	}
 
-	
-	// srand(time(NULL));
+	this->previousOutputs.resize(lookbackSize);
 
-	// this->randomizeNetwork(neuronCounts);
+	this->randomizeNetwork(neuronCounts);
 }
 
-RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts, std::string filename) :
-	Network(neuronCounts, filename) {
+RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts, std::string filename, int lookbackSize) :
+	Network(neuronCounts, filename),
+	lookbackSize(lookbackSize) {
 	if (neuronCounts.size() < 2 || neuronCounts.size() > 3) {
 		std::cerr << "Recurrent networks may only have 2 or 3 layers" << std::endl;
 		exit(1);
 	}
 
-	// this->loadNetwork(neuronCounts, filename);
+	this->previousOutputs.resize(lookbackSize);
+
+	this->loadNetwork(neuronCounts, filename);
 }
 
 std::vector<int> RecurrentNetwork::getWeightSize(int layer) {
@@ -32,10 +35,13 @@ std::vector<int> RecurrentNetwork::getWeightSize(int layer) {
 	// Recurrent networks depend on all neurons for input
 	// so we need to add up all the neurons
 	int totalInfluencingValues = 0;
-
-	// Add up all the neurons in the network
-	for (int i=0;i<this->values.size();i++) {
+	for (int i=0;i<layerCount;i++) {
 		totalInfluencingValues += this->values[i].size();
+	}
+
+	// Assumes worst case scenario, all neurons are populated
+	for (int i=0;i<lookbackSize;i++) {
+		totalInfluencingValues += this->values.back().size();
 	}
 
 	return {
@@ -47,50 +53,40 @@ std::vector<int> RecurrentNetwork::getWeightSize(int layer) {
 	};
 }
 
-Vector RecurrentNetwork::calculateLayer(Vector vector, Matrix matrix, Vector biases) {
-	if (vector.size() != matrix[0].size()) {
-		std::cerr << "calculateLayer-Network.cpp: Vector and matrix are incompatible, size mismatch."
-		 << "Vector: " << vector.size() << " Matrix: " << matrix[0].size() << std::endl;
-		exit(1);
-	}
+void RecurrentNetwork::performBackend(Vector input, Network* thisCopy) {};
 
-	Vector result;
-	// The size of matrix is the number of rows, which is also
-	// the number of rows of the output vector
-	for (int r=0;r< matrix.size() ;r++) {
-		float sum = 0;
+void RecurrentNetwork::performBackend(Vector input, RecurrentNetwork* thisCopy) {
+	// Add the old output to the previousOutputs array
+	thisCopy->previousOutputs.insert(thisCopy->previousOutputs.begin(), thisCopy->values.back());
 
-		// Loop through all the "input" neurons and multiply by the weights matrix columns
-		for (int i=0;i< vector.size() ;i++) {
-			sum += vector[i] * matrix[r][i];
-		}
+	// If the list is at it's max size, remove the oldest output vector from the list
+	if (thisCopy->previousOutputs.size() > thisCopy->lookbackSize)
+		thisCopy->previousOutputs.pop_back();
 
-		// When multiplying matrices, all the columns are multiplied by the
-		// rows of the input vector, then those products are added together to get
-		// the row of the output vector. so now we need to put that sum in the 
-		// next row of the result
-
-		// Add the bias corrosponding to this neuron
-		sum += biases[r];
-
-		// Finally, the resulting value must be constrained
-		sum = ReLU(sum);
-
-		// Next we set the "sum" as the row of the vector
-		result.push_back(sum);
-	}
-
-	return result;
-}
-
-void RecurrentNetwork::performBackend(Vector input, Network* thisCopy) {
 	thisCopy->setValues(0, input); // Just to make it easy
+	
+	int layerCount = values.size();
 
-	int layerCount = thisCopy->getValues().size();
+	// Generate the input for calculating the layer, aka compiling all
+	// neurons in the network into one input vector
+	Vector inputNeurons;
 
+	// Append all the neurons in the current network
+	for (int i=0;i<thisCopy->layerCount;i++) {
+		for (float value : thisCopy->values[i]) {
+			inputNeurons.push_back(value);
+		}
+	}
+
+	// Append previous n outputs
+	for (int i=0;i<thisCopy->lookbackSize;i++) {
+		for (float value : thisCopy->previousOutputs[i]) {
+			inputNeurons.push_back(value);
+		}
+	}
 	// Propagate through the network
 	for (int l=0;l<layerCount - 1;l++) {
-		thisCopy->setValues(l+1, calculateLayer(thisCopy->getValues()[l], thisCopy->getWeights()[l], thisCopy->getBiases()[l]));
+		thisCopy->setValues(l+1, calculateLayer(inputNeurons, thisCopy->getWeights()[l], thisCopy->getBiases()[l]));
 	}
 }
 
@@ -136,6 +132,14 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 				}
 			}
 		}
+
+		// Previous Outputs
+		for (int o=0;o<actualNetwork->previousOutputs.size();o++) {
+			for (int r=0;r<actualNetwork->previousOutputs[o].size();r++) {
+				actualNetwork->previousOutputs[o][r] += secondNetwork->previousOutputs[o][r];
+				actualNetwork->previousOutputs[o][r] /= 2.;
+			}
+		}
 	};
 
 	std::vector<std::thread*> threads(batchSize);
@@ -150,16 +154,32 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 				thisCopy->performBackend(input[trainingCycle % input.size()], thisCopy);
 				Vector expected = expectedOutput[trainingCycle % expectedOutput.size()];
 
+				std::vector<float*> lastValues;
+
+				// Append all the neurons in the current network
+				for (int i=0;i<thisCopy->layerCount;i++) {
+					for (float value : thisCopy->values[i]) {
+						lastValues.push_back(&value);
+					}
+				}
+
+				// Append previous n outputs
+				for (int i=0;i<thisCopy->lookbackSize;i++) {
+					for (float value : thisCopy->previousOutputs[i]) {
+						lastValues.push_back(&value);
+					}
+				}
+
 				// Loop through all layers (recursion but without the downsides)
 				int layer = thisCopy->layerCount;
 				while (layer-- > 1) {
-
-					Vector* lastValues = &thisCopy->values[layer - 1];
+					
+					Vector* actualLastValues = &thisCopy->values[layer - 1];
 					Vector* biases = &thisCopy->biases[layer - 1];
 					Matrix* weights = &thisCopy->weights[layer - 1];
 
 					// For Step 3
-					Vector neuronAdjustments(lastValues->size());
+					Vector neuronAdjustments(thisCopy->values[layer - 1].size());
 
 					Vector cost = calculateCost(thisCopy->values[layer], expected);
 
@@ -170,20 +190,20 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 						(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
 						
 						// Step 2: Adjust weights
-						for (int l=0;l<lastValues->size();l++) {
-							(*weights)[r][l] += cost[r] * (*lastValues)[l] / WEIGHT_ADJUST_DIVISOR;
+						for (int l=0;l<lastValues.size();l++) {
+							(*weights)[r][l] += cost[r] * *lastValues[l] / WEIGHT_ADJUST_DIVISOR;
 						}
 
 						// Step 3: Adjust neurons
-						for (int l=0;l<lastValues->size();l++) {
-							neuronAdjustments[l] += cost[r] * (*lastValues)[l] / NEURON_ADJUST_DIVISOR;
+						for (int l=0;l<actualLastValues->size();l++) {
+							neuronAdjustments[l] += cost[r] * (*actualLastValues)[l] / NEURON_ADJUST_DIVISOR;
 						}
 					}
 
 					// // Continuing Step 3: Create the new expected value for the layer before
-					expected.resize(lastValues->size());
+					expected.resize(actualLastValues->size());
 					for (int i=0;i<expected.size();i++) {
-						expected[i] = (*lastValues)[i] + neuronAdjustments[i];
+						expected[i] = (*actualLastValues)[i] + neuronAdjustments[i];
 					}
 				}
 			}

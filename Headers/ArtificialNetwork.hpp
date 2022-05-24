@@ -10,8 +10,6 @@
 // The Artificial Network Class
 class ArtificialNetwork : public Network {
 protected:
-	Vector calculateLayer(Vector vector, Matrix matrix, Vector biases) override;
-
 	// Propagates through a given network copy, to be used for multithreading
 	void performBackend(Vector input, Network* thisCopy) override;
 

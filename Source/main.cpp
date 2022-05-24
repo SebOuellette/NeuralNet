@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
 	// stbi_load();
 
-	ArtificialNetwork network({3, 10, 3}, "savefile.noupload");
+	RecurrentNetwork network({3, 3}, 0);
 
 	network.batch(
 		// Inputs
