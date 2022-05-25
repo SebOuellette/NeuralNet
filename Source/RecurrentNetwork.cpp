@@ -8,7 +8,7 @@ RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts, int lookbackSi
 		exit(1);
 	}
 
-	this->previousOutputs.resize(lookbackSize);
+	this->previousOutputs = new Vector[lookbackSize];
 
 	this->randomizeNetwork(neuronCounts);
 }
@@ -21,9 +21,16 @@ RecurrentNetwork::RecurrentNetwork(std::vector<int> neuronCounts, std::string fi
 		exit(1);
 	}
 
-	this->previousOutputs.resize(lookbackSize);
+	this->previousOutputs = new Vector[lookbackSize];
 
 	this->loadNetwork(neuronCounts, filename);
+}
+
+RecurrentNetwork::~RecurrentNetwork() {
+	for (int i=0;i<this->lookbackSize;i++) {
+		this->previousOutputs[i].clear();
+	}
+	//delete[] this->previousOutputs;
 }
 
 std::vector<int> RecurrentNetwork::getWeightSize(int layer) {
@@ -53,15 +60,14 @@ std::vector<int> RecurrentNetwork::getWeightSize(int layer) {
 	};
 }
 
-void RecurrentNetwork::performBackend(Vector input, Network* thisCopy) {};
+void RecurrentNetwork::performBackend(Vector input, Network* thisCopy) {
+	this->performBackend(input, (RecurrentNetwork*)thisCopy);
+};
 
 void RecurrentNetwork::performBackend(Vector input, RecurrentNetwork* thisCopy) {
 	// Add the old output to the previousOutputs array
-	thisCopy->previousOutputs.insert(thisCopy->previousOutputs.begin(), thisCopy->values.back());
-
-	// If the list is at it's max size, remove the oldest output vector from the list
-	if (thisCopy->previousOutputs.size() > thisCopy->lookbackSize)
-		thisCopy->previousOutputs.pop_back();
+	thisCopy->previousOutputs[thisCopy->lookbackHead++] = thisCopy->values.back();
+	thisCopy->lookbackHead %= thisCopy->lookbackSize;
 
 	thisCopy->setValues(0, input); // Just to make it easy
 	
@@ -134,12 +140,13 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 		}
 
 		// Previous Outputs
-		for (int o=0;o<actualNetwork->previousOutputs.size();o++) {
-			for (int r=0;r<actualNetwork->previousOutputs[o].size();r++) {
-				actualNetwork->previousOutputs[o][r] += secondNetwork->previousOutputs[o][r];
-				actualNetwork->previousOutputs[o][r] /= 2.;
-			}
-		}
+		std::copy(secondNetwork->previousOutputs, secondNetwork->previousOutputs+secondNetwork->lookbackSize, actualNetwork->previousOutputs);
+		// for (int o=0;o<actualNetwork->lookbackSize;o++) {
+		// 	for (int r=0;r<actualNetwork->previousOutputs[o].size();r++) {
+		// 		actualNetwork->previousOutputs[o][r] += secondNetwork->previousOutputs[o][r];
+		// 		actualNetwork->previousOutputs[o][r] /= 2.;
+		// 	}
+		// }
 	};
 
 	std::vector<std::thread*> threads(batchSize);
@@ -179,7 +186,7 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 					Matrix* weights = &thisCopy->weights[layer - 1];
 
 					// For Step 3
-					Vector neuronAdjustments(thisCopy->values[layer - 1].size());
+					Vector neuronAdjustments(actualLastValues->size());
 
 					Vector cost = calculateCost(thisCopy->values[layer], expected);
 
@@ -190,12 +197,12 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 						(*biases)[r] += cost[r] / BIAS_ADJUST_DIVISOR;
 						
 						// Step 2: Adjust weights
-						for (int l=0;l<lastValues.size();l++) {
-							(*weights)[r][l] += cost[r] * *lastValues[l] / WEIGHT_ADJUST_DIVISOR;
+						for (int l=0;l<actualLastValues->size();l++) {
+							(*weights)[r][l] += cost[r] * (*actualLastValues)[l] / WEIGHT_ADJUST_DIVISOR;
 						}
 
 						// Step 3: Adjust neurons
-						for (int l=0;l<actualLastValues->size();l++) {
+						for (int l=0;l<neuronAdjustments.size();l++) {
 							neuronAdjustments[l] += cost[r] * (*actualLastValues)[l] / NEURON_ADJUST_DIVISOR;
 						}
 					}
@@ -222,10 +229,9 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 
 		//A copy of this is made for each thread, afterwards they are all joined together
 		networkCopies[t] = new RecurrentNetwork(*this);
-		RecurrentNetwork* thisCopy = networkCopies[t];
 
 		// thisCopy must be passed as an argument or it corrupts and you get segfaults
-		threads[t] = new std::thread(threadFunc, thisCopy, this);
+		threads[t] = new std::thread(threadFunc, networkCopies[t], this);
 	}
 
 	// Join the threads
@@ -241,3 +247,9 @@ void RecurrentNetwork::batch(Matrix input, Matrix expectedOutput, int trainingCy
 		delete networkCopies[i];
 	}
 }
+
+// void RecurrentNetwork::print() {
+// 	for (int i=0;i<lookbackSize;i++) {
+// 		Network::printVector(previousOutputs[i]);
+// 	}
+// }

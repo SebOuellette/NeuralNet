@@ -10,8 +10,9 @@
 // The Recurrent Network class
 class RecurrentNetwork : public Network {
 protected:
-	int lookbackSize;
-	std::vector<Vector> previousOutputs;
+	int lookbackSize = 0;
+	int lookbackHead = 0;
+	Vector* previousOutputs;
 
 	// Propagates through a given network copy, to be used for multithreading
 	void performBackend(Vector input, Network* thisCopy) override;
@@ -25,10 +26,14 @@ public:
 
 	// Load the network from a file
 	RecurrentNetwork(std::vector<int> neuronCounts, std::string filename, int lookbackSize = 0);
+	~RecurrentNetwork();
 
 	// Backpropagates through the network using multithreading
 	// Batch size should pretty much always be the number of virtual processors in the machine
 	void batch(Matrix input, Matrix expectedOutput, int trainingCycles = 1, int batchSize = 1) override;
+
+	// Print the previous outputs after the rest of the normal output
+	// void print();
 };
 
 #endif // RECURRENT_NETWORK_HPP

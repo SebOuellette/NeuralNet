@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
 	// stbi_load();
 
-	RecurrentNetwork network({3, 3}, 0);
+	RecurrentNetwork network({3, 3}, 10);
 
 	network.batch(
 		// Inputs
