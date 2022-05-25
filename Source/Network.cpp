@@ -20,6 +20,14 @@ Network::Network(std::vector<int> neuronCounts, std::string filename) {
 	// Cannot load network here because it depends on child class's getWeightSize override
 }
 
+// Copy constructor
+Network::Network(Network* network) {
+	this->layerCount = network->layerCount;
+	this->values = network->getValues();
+	this->biases = network->getBiases();
+	this->weights = network->getWeights();
+}
+
 Vector Network::perform(Vector input) {
 	this->performBackend(input, this);
 
@@ -325,6 +333,10 @@ void Network::setWeight(int layer, int row, int index, float weight) {
 
 // Static methods
 Vector Network::calculateCost(Vector actual, Vector expected) {
+	if (actual.size() != expected.size()) {
+		std::cerr << "Network::calculateCost - actual not the same size as expected" << std::endl;
+		exit(1);
+	}
 	// The vector containing the cost of the output
 	Vector cost(actual.size());
 

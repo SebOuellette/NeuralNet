@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
 	// stbi_load();
 
-	RecurrentNetwork network({3, 3}, 10);
+	RecurrentNetwork network({3, 10, 3});
 
 	network.batch(
 		// Inputs
@@ -22,10 +22,10 @@ int main(int argc, char* argv[]) {
 		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}},
 
 		// Total training cycles across threads
-		500000,
+		50000,
 
 		// Thread count
-		16
+		1
 	);
 
 	//Network::printVector(network.perform({1, 0, 1}));

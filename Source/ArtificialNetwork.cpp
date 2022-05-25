@@ -132,7 +132,7 @@ void ArtificialNetwork::batch(Matrix input, Matrix expectedOutput, int trainingC
 
 						// Step 3: Adjust neurons
 						for (int l=0;l<lastValues->size();l++) {
-							neuronAdjustments[l] += cost[r] * (*lastValues)[l] / NEURON_ADJUST_DIVISOR;
+							neuronAdjustments[l] += cost[r] * (*weights)[r][l] / NEURON_ADJUST_DIVISOR;
 						}
 					}
 

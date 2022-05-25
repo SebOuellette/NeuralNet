@@ -62,6 +62,7 @@ public:
 	Network(std::vector<int> neuronCounts);
 	// Load the network from a file
 	Network(std::vector<int> neuronCounts, std::string filename);
+	Network(Network * network);
 	// Save the network to a file
 	void save(std::string filename);
 
