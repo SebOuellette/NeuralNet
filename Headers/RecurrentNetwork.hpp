@@ -2,7 +2,7 @@
 #define RECURRENT_NETWORK_HPP
 
 #include "Network.hpp"
-
+ 
 #define BIAS_ADJUST_DIVISOR 50.f
 #define WEIGHT_ADJUST_DIVISOR 60.f
 #define NEURON_ADJUST_DIVISOR 50.f

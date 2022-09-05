@@ -8,9 +8,7 @@
 
 int main(int argc, char* argv[]) {
 
-	// stbi_load();
-
-	RecurrentNetwork network({3, 10, 3});
+	ArtificialNetwork network({3, 10, 3});
 
 	network.batch(
 		// Inputs
@@ -22,10 +20,10 @@ int main(int argc, char* argv[]) {
 		 {0, 1, 1},{0, 1, 0},{0, 0, 1},{0, 0, 0}},
 
 		// Total training cycles across threads
-		50000,
+		5000000,
 
 		// Thread count
-		1
+		16
 	);
 
 	//Network::printVector(network.perform({1, 0, 1}));
@@ -37,7 +35,6 @@ int main(int argc, char* argv[]) {
 	std::cout << "Cost: " << std::endl;
 	Network::printVector(Network::calculateCost(network.perform({1, 0, 1}), {0, 1, 0}));
 
-	network.save("savefile.noupload");
 
 	return 0;
 }
